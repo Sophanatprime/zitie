@@ -13,4 +13,4 @@ LaTeX package for CJK calligraphy practicing
 
 `\begin{zitieframe}{<initials>}[<options>] ... \end{zitieframe}`
 
-etc, see the source `zitie.sty`.
+options and other macro see the source: `zitie.sty`.
