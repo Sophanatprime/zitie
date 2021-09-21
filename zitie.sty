@@ -1,0 +1,1007 @@
+\NeedsTeXFormat{LaTeX2e}[2020/10/01]
+\RequirePackage{ xparse , l3keys2e }
+\RequirePackage{ l3draw }
+\ProvidesExplPackage {zitie} {2021/09/21} {v1.0} {CJK character calligraphy sheet}
+\RequirePackage { xeCJK }
+\@ifpackageloaded { ctex } { } 
+  { \RequirePackage { ctexsize } \sys_if_platform_windows:T { \setCJKmainfont {SimSun} } }
+\@ifpackageloaded { xcolor }
+  { 
+    \cs_set_nopar:Npn \zitie_color_set:nn #1#2 { \colorlet{#1}{#2} \color_set:nn {#1} {#2} } 
+    \cs_set_nopar:Npn \zitie_color_set:nnn #1#2#3 { \colorlet{#1}[#2]{#3} \color_set:nnn {#1} {#2} {#3} }
+  }
+  { 
+    \hook_gput_code:nnn { package/after/xcolor } { package } 
+      { 
+        \cs_set_nopar:Npn \zitie_color_set:nn #1#2 { \colorlet{#1}{#2} \color_set:nn {#1} {#2} } 
+        \cs_set_nopar:Npn \zitie_color_set:nnn #1#2#3 { \colorlet{#1}[#2]{#3} \color_set:nnn {#1} {#2} {#3} }
+      } 
+    \cs_set_nopar:Npn \zitie_color_set:nn #1#2 { \color_set:nn {#1} {#2} }
+    \cs_set_nopar:Npn \zitie_color_set:nnn #1#2#3 { \color_set:nnn {#1} {#2} {#3} }
+  }
+\NewDocumentCommand \zitiecolorlet { m o m }
+  { \IfNoValueTF {#2} { \zitie_color_set:nn {#1} {#3} } { \zitie_color_set:nnn {#1} {#2} {#3} } }
+
+\char_set_catcode_comment:N \^^A 
+
+^^A \msg_new:nnn { zitie } { xetex } { `zitie'~ can~ only~ be~ used~ in~ xetex. }
+^^A \sys_if_engine_xetex:F { \msg_fatal:nn { zitie } { xetex } }
+
+\box_new:N \l_zitie_basebox_box
+\tl_new:N \l_zitie_frame_type_tl
+\tl_new:N \l_zitie_resize_method_tl
+\clist_new:N \g__zitie_frame_list_clist
+\clist_new:N \g__zitie_resize_method_clist
+\dim_new:N \l__zitie_char_width_dim
+\dim_new:N \l__zitie_char_height_dim
+\dim_new:N \l__zitie_box_width_dim
+\dim_new:N \l__zitie_box_height_dim
+\coffin_new:N \l__zitie_box_coffin
+\dim_new:N \l__zitie_linewidth_dim
+\cs_new_nopar:Nn \__zitie_aux_color_fill: { }
+\ior_new:N \g__zitie_file_read_ior
+\clist_new:N \g__zitie_fallback_font_clist
+
+\dim_new:N \zitiewidth
+\dim_new:N \zitieheight
+\dim_new:N \zitieboxwd
+\dim_new:N \zitieboxht
+\dim_new:N \zitieboxdp
+\tl_new:N \zitiefontname
+\tl_new:N \zitiexscaleratio
+\tl_new:N \zitieyscaleratio
+
+\int_new:N \l__zitie_begin_int
+\int_new:N \l__zitie_end_int
+\clist_new:N \l__zitie_tmpa_clist
+\tl_new:N \l__zitie_tmpa_tl
+\seq_new:N \l__zitie_tmpa_seq
+\coffin_new:N \l__zitie_tmpa_coffin
+\coffin_new:N \l__zitie_tmpb_coffin
+\tl_new:N \l__zitie_file_chars_tl
+
+\tl_const:Nn \c_zitie_font_name_prefix_tl { 字帖@ }
+
+\prg_set_eq_conditional:NNn \zitie_font_if_exist:n \fontspec_font_if_exist:n { T, F, TF }
+\cs_new_nopar:Npn \__zitie_zihao:n #1 { \zihao {#1} }
+\cs_set_eq:NN \__zitie_check_num_range:nnNN \__xeCJK_check_num_range:nnNN
+\cs_set_eq:NN \__zitie_int_until_do:nn \xeCJK_int_until_do:nn 
+\cs_new_nopar:Npn \__zitie_font_select:nN #1 
+  { 
+    \xeCJK_family_if_exist:nTF { \c_zitie_font_name_prefix_tl #1 } 
+      { \CJKfamily+ { \c_zitie_font_name_prefix_tl #1 } }
+      { \CJKfamily+ {#1} }
+  }
+\NewDocumentCommand \zitieCJKfamily { t+ t- m }
+  {
+    \xeCJK_family_if_exist:nTF { \c_zitie_font_name_prefix_tl #3 }
+      { \xeCJK_family:NNx #1 #2 { \c_zitie_font_name_prefix_tl #3 } }
+      { \xeCJK_family:NNx #1 #2 {#3} }
+    \tex_ignorespaces:D 
+  }
+\msg_new:nnn { zitie } { font-exist } { Font~ `#1'~ not~ exist, has~ been~ ignored. }
+\cs_new:Npn \__zitie_new_font_family:nnn #1#2#3 % family name, font name, feature
+  { \__xeCJK_pass_args:nnnn { \xeCJK_set_family:nnn { \c_zitie_font_name_prefix_tl #1 } } {#3} {#2} { } }
+\cs_new:Npn \__zitie_new_font_family_validate:nnn #1#2#3
+  {
+    \zitie_font_if_exist:nTF {#2} { \__zitie_new_font_family:nnn {#1} {#2} {#3} }
+      { \msg_warning:nnn { zitie } { font-exist } {#2} }
+  }
+\cs_new:Npn \zitie_token_class_dispatch:Nnnnn #1 
+  {
+    \if_case:w \xeCJK_token_value_class:N #1 \exp_stop_f: 
+      \exp_after:wN \use_none:nnn  % other 
+    \or: \exp_after:wN \use_i:nnnn % CJK
+    \or: \exp_after:wN \use_ii:nnnn % FullLeft
+    \or: \exp_after:wN \use_iii:nnnn % FullRight
+    \else: \exp_after:wN \use_none:nnn % other 
+    \fi:
+  }
+\cs_new:Npn \zitie_token_class_dispatch_o:Nnnnn #1
+  { \exp_after:wN \zitie_token_class_dispatch:Nnnnn #1 }
+\cs_new:Npn \zitie_token_class_dispatch_f:Nnnnn #1
+  { \exp_args:Nf \zitie_token_class_dispatch:Nnnnn #1 }
+\prg_new_conditional:Npnn \zitie_token_if_punctuation:N #1 { p, T, F, TF }
+  {
+    \int_compare:nNnTF { \xeCJK_token_value_class:N #1 } > 1
+      { 
+        \int_compare:nNnTF { \xeCJK_token_value_class:N #1 } < 6
+          { \prg_return_true: } { \prg_return_false: }
+      }
+      { \prg_return_false: }
+  }
+\cs_set:Npn \zitie_token_if_punctuation_o:NTF
+  { \exp_after:wN \zitie_token_if_punctuation:NTF }
+\cs_set:Npn \zitie_token_if_punctuation_o:NT
+  { \exp_after:wN \zitie_token_if_punctuation:NT }
+\cs_set:Npn \zitie_token_if_punctuation_o:NF
+  { \exp_after:wN \zitie_token_if_punctuation:NF }
+\cs_set:Npn \zitie_token_if_punctuation_f:NTF
+  { \exp_args:Nf \zitie_token_if_punctuation:NTF }
+\cs_set:Npn \zitie_token_if_punctuation_f:NT
+  { \exp_args:Nf \zitie_token_if_punctuation:NT }
+\cs_set:Npn \zitie_token_if_punctuation_f:NF
+  { \exp_args:Nf \zitie_token_if_punctuation:NF }
+
+
+\prg_new_conditional:Npnn \zitie_if_preamble: { p, T, F, TF }
+  {
+    \if_meaning:w \@onlypreamble \@notprerr
+      \prg_return_false:
+    \else:
+      \prg_return_true:
+    \fi:
+  }
+\cs_new:Npn \__zitie_calc_basechar_w_h:
+  {
+    \dim_set:Nn \l__zitie_char_width_dim { \box_wd:N \l_zitie_basebox_box }
+    \dim_set:Nn \l__zitie_char_height_dim { \box_ht_plus_dp:N \l_zitie_basebox_box }
+  }
+\cs_new_nopar:Npn \__zitie_frame_type:n #1 { __zitie_frame_construct_type_ #1 :nnnnnn } % x1, y1, x2, y2, x times, y times
+\cs_new_nopar:Npn \__zitie_frame_type_c:n #1 { \use:c { __zitie_frame_construct_type_ #1 :nnnnnn } }
+\cs_new_nopar:Npn \__zitie_resize:n #1 { __zitie_processor_resize_ #1 :w }
+\cs_new_nopar:Npn \__zitie_resize_c:n #1 { \use:c { __zitie_processor_resize_ #1 :w } }
+\cs_new_nopar:Npn \zitie_processor:n #1 { __zitie_processor_ #1 :w }
+\cs_new_nopar:Npn \zitie_processor_c:n #1 { \use:c { __zitie_processor_ #1 :w } }
+\cs_new_nopar:Npn \zitie_processor:nnn #1#2#3
+  {
+    __zitie_processor_ #1 @ #2 :
+    \if_case:w 0#3 \prg_do_nothing: 
+    \or: n \or: nn \or: nnn \or: nnnn \or: nnnnn \or: nnnnnn 
+    \or: nnnnnnn \or: nnnnnnnn \else: nnnnnnnnn \fi:
+  }
+\cs_new_nopar:Npn \zitie_processor_c:nnn #1#2#3 { \use:c { \zitie_processor:nnn {#1} {#2} {#3} } }
+\cs_new_nopar:Npn \__zitie_coffin_ht_plus_dp:N #1 { \coffin_ht:N #1 + \coffin_dp:N #1 }
+\cs_new:Npn \zitie_debug:n { \bool_if:NTF \l__zitie_debug_bool { \use:n } { \use_none:n } }
+\cs_new_nopar:Npn \zitie_cjk_glyph_use:nN #1#2
+  {
+    \group_begin:
+    \bool_if:NTF \l__zitie_font_fallback_bool
+      {
+        \__zitie_font_select:nN {#1} \prg_do_nothing: 
+        \__zitie_cjk_glyph_use_aux:N #2 
+      } 
+      { \__zitie_font_select:nN {#1} #2 }
+    \group_end:
+  }
+\cs_new_nopar:Npn \__zitie_cjk_glyph_use_aux:N #1
+  {
+    \exp_args:Nf \xeCJK_glyph_if_exist:NTF #1 {#1}
+      {
+        \clist_pop:NNTF \g__zitie_fallback_font_clist \l__zitie_tmpa_tl
+          {
+            \xeCJK_family_if_exist:nTF { \c_zitie_font_name_prefix_tl \l__zitie_tmpa_tl }
+              {
+                \CJKfamily+ { \c_zitie_font_name_prefix_tl \l__zitie_tmpa_tl }
+                \__zitie_cjk_glyph_use_aux:N #1
+              }
+              {
+                \CJKfamily+ { \l__zitie_tmpa_tl }
+                \__zitie_cjk_glyph_use_aux:N #1
+              }
+          }
+          {#1}
+      }
+  }
+
+
+\msg_new:nnn { zitie } { frame-exists } { The~ frame~ type~ `#1~ not~ exists. }
+\msg_new:nnn { zitie } { font-args } { The~ font~ arguments~ number~ must~ be~ 2~ or~ 3, while~ you~ get~ `#1' }
+
+\keys_define:nn { zitie }
+  { 
+    enable-background .bool_set:N = \g__zitie_enable_background_bool ,
+    enable-background .initial:n = false ,
+    enable-background .default:n = true ,
+    enable-zhlipsum .bool_set:N = \g__zitie_enable_zhlipsum_bool ,
+    enable-zhlipsum .initial:n = false ,
+    enable-zhlipsum .default:n = true ,
+  }
+
+\keys_define:nn { zitie }
+  {
+    basechar .code:n = { \tl_gset:Nx \c_zitie_basechar_tl {#1} \__zitie_calc_basechar_w_h: } ,
+    zihao .code:n = 
+      { 
+        \hbox_gset:Nn \l_zitie_basebox_box { \__zitie_zihao:n {#1} \c_zitie_basechar_tl } 
+        \__zitie_calc_basechar_w_h:
+      } ,
+    punctuation .choice: ,
+    punctuation / ignore .code:n = { \cs_set_eq:cN { \zitie_processor:n { punctuation } } \use_none:n } ,
+    punctuation / leave .code:n = { \cs_set_eq:cN { \zitie_processor:n { punctuation } } \use:n } ,
+    punctuation / unknown .code:n = { \cs_set_eq:cc { \zitie_processor:n { punctuation } } {#1} } ,
+    punctuation .initial:n = ignore ,
+    punctuation* .cs_set:cp = { \zitie_processor:n { punctuation } } #1 ,
+    
+    frametype .code:n = 
+      { 
+        \exp_args:NNx \clist_if_in:NnTF \g__zitie_frame_list_clist {#1} 
+          { \tl_set:Nx \l_zitie_frame_type_tl {#1} }
+          { \msg_error:nnx { zitie } { frame-exists } {#1} }
+      } ,
+    resize .code:n = 
+      {
+        \exp_args:NNx \clist_if_in:NnTF \g__zitie_resize_method_clist {#1}
+          { \tl_set:Nx \l_zitie_resize_method_tl {#1} }
+          { \msg_error:nnx { zitie } { resize-method } {#1} }
+      } ,
+    font .tl_set:N = \l__zitie_font_tl ,
+    font .initial:n = 宋体 ,
+    font .default:n = { } , % { \l_xeCJK_family_tl } ,
+    xscale .tl_set:N = \l__zitie_x_scale_tl ,
+    xscale .initial:n = 1 ,
+    yscale .tl_set:N = \l__zitie_y_scale_tl ,
+    yscale .initial:n = 1 ,
+    scale .meta:n = { xscale = #1 , yscale = #1 } ,
+    width .dim_set:N = \l__zitie_box_width_dim ,
+    height .dim_set:N = \l__zitie_box_height_dim ,
+    linewidth .dim_set:N = \l__zitie_linewidth_dim ,
+    linewidth .initial:n = 0.4pt ,
+    framecolor .code:n = { \zitie_color_set:nn { zitieframecolor } {#1} } ,
+    framecolor .initial:n = black ,
+    framecolor* .code:n = { \zitie_color_set:nnn { zitieframecolor } #1 } ,
+    charcolor .code:n = { \zitie_color_set:nn { zitiecharcolor } {#1} } ,
+    charcolor .initial:n = black ,
+    charcolor* .code:n = { \zitie_color_set:nnn { zitieframecolor } {#1} } ,
+    color .meta:n = { framecolor = #1, charcolor = #1 } ,
+    color* .meta:n = { framecolor* = #1, charcolor* = #1 } ,
+    fillcolor .code:n = 
+      { 
+        \exp_args:Nx \tl_if_empty:nTF {#1}
+          { \zitie_color_set:nn { zitiefillcolor } { white } \cs_set_nopar:Npn \__zitie_aux_color_fill: { } }
+          { 
+            \zitie_color_set:nn { zitiefillcolor } {#1}
+            \cs_set_nopar:Npn \__zitie_aux_color_fill: { \color_fill:n {#1} } 
+          }
+      } ,
+    fillcolor* .code:n = 
+      { 
+        \zitie_color_set:nnn { zitiefillcolor } #1
+        \cs_set_nopar:Npn \__zitie_aux_color_fill: { \color_fill:nn #1 } 
+      } ,
+    dashpattern .tl_set:N = \l__zitie_dash_pattern_tl ,
+    dashpattern .initial:n = { } ,
+    framearc .code:n = { \tl_set:Nn \l__zitie_frame_arc_tl { {#1}{#1} } } ,
+    framearc* .tl_set:N = \l__zitie_frame_arc_tl ,
+    framearc* .initial:n = { { 0cm }{ 0cm } } ,
+    filepath .code:n = 
+      {
+        \seq_clear:N \l_file_search_path_seq 
+        \keys_set:nn { zitie } { filepath+ = {#1} }
+      } ,
+    filepath+ .code:n = { \tl_map_inline:nn {#1} { \seq_put_right:Nn \l_file_search_path_seq {##1} } } ,
+
+    debug .bool_set:N = \l__zitie_debug_bool ,
+    debug .initial:n = false ,
+    debug .default:n = true ,
+    savefontname .bool_set:N = \l__zitie_savefontname_bool ,
+    savefontname .initial:n = false ,
+    savefontname .default:n = true ,
+    fallback .bool_set:N = \l__zitie_font_fallback_bool ,
+    fallback .initial:n = false ,
+    fallback .default:n = true ,
+    fallbackfont .clist_set:N = \g__zitie_fallback_font_clist ,
+    fallbackfont .initial:n = { 宋体 } ,
+    fallbackfont+ .code:n = { \clist_put_right:Nn \g__zitie_fallback_font_clist {#1} } ,
+  }
+
+\hook_new_pair:nn { zitie/processor/before } { zitie/processor/after }
+\cs_new:Npn \zitie_new_process_rule:nnn #1#2#3 % processor, id, code
+  {
+    \cs_set:cpn { __zitie_processor_ #1 @ #2 :n } ##1 
+      { \hook_use:n { zitie/processor/before } #3 \hook_use:n { zitie/processor/after } }
+    \keys_define:nn { zitie } 
+      { #1/#2 .code:n = { \cs_set_eq:cc { \zitie_processor:n {#1} } { __zitie_processor_ #1 @ #2 :n } } }
+  }
+\cs_new:Npn \zitie_new_process_rule:nnnn #1#2#3#4 % processor, id, arg num, code
+  {
+    \cs_set:cn { \zitie_processor:nnn {#1} {#2} {#3} } 
+      { \hook_use:n { zitie/processor/before } #4 \hook_use:n { zitie/processor/after } }
+    \keys_define:nn { zitie } 
+      { #1/#2 .code:n = { \cs_set_eq:cc { \zitie_processor:n {#1} } { \zitie_processor:nnn {#1} {#2} {#3} } } }
+  }
+\NewDocumentCommand \zitienewrule { O{1} >{\TrimSpaces} m m m } { \zitie_new_process_rule:nnnn {#2} {#3} {#1} {#4} }
+\zitie_new_process_rule:nnn { punctuation } { onlast }
+  { \smash{ \makebox[0pt]{ \color_select:n { zitiecharcolor } \zitieCJKfamily{\zitiefontname} #1 } } }
+\zitie_new_process_rule:nnn { punctuation } { scale }
+  { 
+    \hbox_set:Nn \l_tmpa_box { \color_select:n { zitiecharcolor } \zitieCJKfamily{\zitiefontname} #1 }
+    \box_scale:Nnn \l_tmpa_box \zitiexscaleratio \zitieyscaleratio \box_use_drop:N \l_tmpa_box 
+  }
+
+\cs_new:Npn \__zitie_new_font_family:nn #1#2 { \__zitie_new_font_family:nnn {#1} {#2} { } }
+\cs_new:Npn \__zitie_new_font_family_validate:nn #1#2 { \__zitie_new_font_family_validate:nnn {#1} {#2} { } }
+\cs_new:Npn \zitie_new_font:n #1
+  {
+    \clist_map_inline:nn {#1}
+      {
+        \int_case:nnF { \tl_count:n {##1} }
+          {
+            { 2 } { \__zitie_new_font_family_validate:nn ##1 } 
+            { 3 } { \__zitie_new_font_family_validate:nnn ##1 }
+          }
+          { \msg_error:nnn { zitie } { font-args } {##1} }
+      }
+  }
+\cs_new:Npn \zitie_new_font:nnn #1#2#3 % fontfamily, fontname, font feature
+  {
+    \seq_set_from_clist:Nn \l__zitie_tmpa_seq {#1}
+    \clist_set:Nn \l__zitie_tmpa_clist {#2}
+    \seq_map_indexed_inline:Nn \l__zitie_tmpa_seq
+      {
+        \__zitie_new_font_family_validate:nnn 
+          { ##2 } { \clist_item:Nn \l__zitie_tmpa_clist {##1} } {#3}
+      }
+  }
+
+\cs_new:Npn \zitiesetup #1 
+  { 
+    \keys_set:nn { zitie } {#1} 
+    \bool_if:NTF \l__zitie_savefontname_bool
+      { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
+      { \tl_gset_eq:NN \zitiefontname \c_empty_tl }
+  }
+
+
+\cs_new:Npn \zitie_new_resize_method:nn #1 
+  { 
+    \clist_put_right:Nn \g__zitie_resize_method_clist {#1}
+    \cs_new:cpn { \__zitie_resize:n {#1} } 
+  }
+\zitie_new_resize_method:nn { none } { }
+\cs_new:Npn \zitie_new_frame_construct:nn #1 
+  { 
+    \clist_put_right:Nn \g__zitie_frame_list_clist {#1}
+    \cs_new:cn { \__zitie_frame_type:n {#1} } 
+  }
+\zitie_new_frame_construct:nn { none } { }
+
+\zitie_font_if_exist:nT { SimSun } { \zitie_new_font:n { {宋体}{SimSun} } }
+\keys_set:nn { zitie } 
+  {
+    basechar = 好 ,
+    zihao = 4 ,
+    frametype = none ,
+    resize = none ,
+  }
+
+\ProcessKeysPackageOptions { zitie }
+\cs_new:Npn \zitie_single_construct:nN #1#2
+  {
+    \group_begin:
+    \tl_if_empty:nF {#1} { \keys_set:nn { zitie } {#1} }
+    \tl_set:Nf \l__zitie_curr_char_tl {#2}
+    \__zitie_single_construct_o:N \l__zitie_curr_char_tl
+    \group_end:
+  }
+\cs_new:Npn \zitie_single_construct:N #1
+  {
+    \group_begin:
+    \tl_set:Nf \l__zitie_curr_char_tl {#1}
+    \__zitie_single_construct_o:N \l__zitie_curr_char_tl
+    \group_end:
+  }
+\cs_new:Npn \__zitie_single_construct:N #1
+  {
+    \zitie_token_if_punctuation_f:NTF #1
+      { \zitie_processor_c:n { punctuation } {#1} }
+      {
+        \hcoffin_set:Nn \l__zitie_box_coffin 
+          { 
+            \color_select:n { zitiecharcolor } 
+            \zitie_cjk_glyph_use:nN { \l__zitie_font_tl } \l__zitie_curr_char_tl 
+          }
+        \tl_set:Nx \zitiexscaleratio { \dim_to_decimal:n { \coffin_wd:N \l__zitie_box_coffin} }
+        \tl_set:Nx \zitieyscaleratio { \dim_to_decimal:n { \__zitie_coffin_ht_plus_dp:N \l__zitie_box_coffin } }
+        \__zitie_resize_c:n { \l_zitie_resize_method_tl }
+        \dim_gset:Nn \zitiewidth { \coffin_wd:N \l__zitie_box_coffin }
+        \dim_gset_eq:NN \zitieboxwd \zitiewidth
+        \dim_gset:Nn \zitieboxht { \coffin_ht:N \l__zitie_box_coffin }
+        \dim_gset:Nn \zitieboxdp { \coffin_dp:N \l__zitie_box_coffin }
+        \dim_gset:Nn \zitieheight { \zitieboxht + \zitieboxdp }
+        \tl_gset:Nx \zitiexscaleratio { \fp_eval:n { \dim_to_fp:n { \zitiewidth } / \zitiexscaleratio } }
+        \tl_gset:Nx \zitieyscaleratio { \fp_eval:n { \dim_to_fp:n { \zitieheight } / \zitieyscaleratio } }
+        \__zitie_single_frame_construct:
+      }
+  }
+\cs_set:Npn \__zitie_single_construct_o:N
+  { \exp_after:wN \__zitie_single_construct:N }
+\cs_set:Npn \__zitie_single_construct_f:N
+  { \exp_args:Nf \__zitie_single_construct:N }
+
+\cs_new:Npn \zitie_dim_gezero_dispatch:NNnnn #1#2 #3#4#5
+  {
+    \dim_compare:nNnTF #1 > \c_zero_dim
+      { #3 }
+      {
+        \dim_compare:nNnTF #2 > \c_zero_dim
+          { #4 } { #5 }
+      }
+  }
+\cs_new:Npn \zitie_dim_gezero_dispatch:NNnnnn #1#2 #3#4#5#6
+  {
+    \dim_compare:nNnTF #1 > \c_zero_dim
+      {
+        \dim_compare:nNnTF #2 > \c_zero_dim
+          { #3 } { #4 }
+      }
+      {
+        \dim_compare:nNnTF #2 > \c_zero_dim
+          { #5 } { #6 }
+      }
+  }
+\cs_new:Npn \__zitie_force_size_dispatch:nnn % height, width, none 
+  { \zitie_dim_gezero_dispatch:NNnnn \l__zitie_box_height_dim \l__zitie_box_width_dim }
+\cs_new:Npn \__zitie_force_size_dispatch:nnnn % both, height, width, none
+  { \zitie_dim_gezero_dispatch:NNnnnn \l__zitie_box_height_dim \l__zitie_box_width_dim }
+\zitie_new_resize_method:nn { real }
+  {
+    \__zitie_force_size_dispatch:nnnn 
+      { \coffin_resize:Nnn \l__zitie_box_coffin \l__zitie_box_width_dim \l__zitie_box_height_dim }
+      { 
+        \coffin_scale:Nnn \l__zitie_box_coffin 
+          { \dim_ratio:nn { \l__zitie_box_height_dim } { \__zitie_coffin_ht_plus_dp:N \l__zitie_box_coffin } }
+          { \dim_ratio:nn { \l__zitie_box_height_dim } { \__zitie_coffin_ht_plus_dp:N \l__zitie_box_coffin } }
+      }
+      {
+        \coffin_scale:Nnn \l__zitie_box_coffin 
+          { \dim_ratio:nn { \l__zitie_box_width_dim } { \coffin_wd:N \l__zitie_box_coffin } }
+          { \dim_ratio:nn { \l__zitie_box_width_dim } { \coffin_wd:N \l__zitie_box_coffin } }
+      }
+      { \coffin_scale:Nnn \l__zitie_box_coffin { \l__zitie_x_scale_tl } { \l__zitie_y_scale_tl } }
+  }
+
+\zitie_new_resize_method:nn { base }
+  {
+    \__zitie_force_size_dispatch:nnnn 
+      { \coffin_resize:Nnn \l__zitie_box_coffin \l__zitie_box_width_dim \l__zitie_box_height_dim }
+      {
+        \coffin_resize:Nnn \l__zitie_box_coffin
+          { \l__zitie_char_width_dim * \dim_ratio:nn { \l__zitie_box_height_dim } { \__zitie_coffin_ht_plus_dp:N \l__zitie_box_coffin } }
+          { \l__zitie_box_height_dim }
+      }
+      {
+        \coffin_resize:Nnn \l__zitie_box_coffin
+          { \l__zitie_box_width_dim }
+          { \l__zitie_char_height_dim * \dim_ratio:nn { \l__zitie_box_width_dim } { \coffin_wd:N \l__zitie_box_coffin } }
+      }
+      {
+        \coffin_resize:Nnn \l__zitie_box_coffin 
+          { \l__zitie_x_scale_tl \l__zitie_char_width_dim }
+          { \l__zitie_y_scale_tl \l__zitie_char_height_dim }
+      }
+  }
+
+\zitie_new_resize_method:nn { square }
+  {
+    \hcoffin_set:Nn \l__zitie_tmpa_coffin { \phantom { \c_zitie_basechar_tl } }
+    \dim_set:Nn \zitiewidth { \coffin_wd:N \l__zitie_box_coffin }
+    \dim_set:Nn \zitieheight { \__zitie_coffin_ht_plus_dp:N \l__zitie_box_coffin }
+    \__zitie_resize_method_square_aux:
+    \tl_set:Nx \zitiexscaleratio { \dim_to_decimal:n \zitiewidth }
+    \tl_set_eq:NN \zitieyscaleratio \zitiexscaleratio
+    \__zitie_force_size_dispatch:nnnn 
+      { \coffin_resize:Nnn \l__zitie_box_coffin \l__zitie_box_width_dim \l__zitie_box_height_dim }
+      { \coffin_resize:Nnn \l__zitie_box_coffin \l__zitie_box_height_dim \l__zitie_box_height_dim }
+      { \coffin_resize:Nnn \l__zitie_box_coffin \l__zitie_box_width_dim \l__zitie_box_width_dim }
+      {
+        \coffin_scale:Nnn \l__zitie_box_coffin \l__zitie_x_scale_tl \l__zitie_y_scale_tl
+        ^^A \coffin_scale:Nnn \l__zitie_box_coffin 
+        ^^A   { \l__zitie_x_scale_tl * \dim_ratio:nn { \l__zitie_char_height_dim } { \__zitie_coffin_ht_plus_dp:N \l__zitie_box_coffin } }
+        ^^A   { \l__zitie_y_scale_tl * \dim_ratio:nn { \l__zitie_char_height_dim } { \__zitie_coffin_ht_plus_dp:N \l__zitie_box_coffin } }
+      }
+  }
+\cs_new:Npn \__zitie_resize_method_square_aux:
+  {
+    \if_dim:w \zitieheight > \zitiewidth
+      \coffin_resize:Nnn \l__zitie_tmpa_coffin
+        { ( \zitieheight - \zitiewidth ) / 2 }
+        { \zitieheight }
+      \coffin_join:NnnNnnnn \l__zitie_box_coffin { r } { vc } \l__zitie_tmpa_coffin { l } { vc } { 0pt } { 0pt }
+      \coffin_join:NnnNnnnn \l__zitie_box_coffin { l } { vc } \l__zitie_tmpa_coffin { r } { vc } { 0pt } { 0pt }
+      \dim_set_eq:NN \zitiewidth \zitieheight
+    \else: \if_dim:w \zitiewidth > \zitieheight
+      \coffin_resize:Nnn \l__zitie_tmpa_coffin 
+        { \zitiewidth }
+        { ( \zitiewidth - \zitieheight ) / 2 }
+      \coffin_join:NnnNnnnn \l__zitie_box_coffin { hc } { t } \l__zitie_tmpa_coffin { hc } { b } { 0pt } { 0pt }
+      \coffin_join:NnnNnnnn \l__zitie_box_coffin { hc } { b } \l__zitie_tmpa_coffin { hc } { t } { 0pt } { 0pt }
+      \dim_set_eq:NN \zitieheight \zitiewidth
+    \fi: \fi:
+  }
+
+\msg_new:nnn { zitie } { frame-type } { using~ `#1'~ frame. }
+\cs_new:Npn \__zitie_single_frame_construct:
+  {
+    \draw_begin:
+    \draw_linewidth:n { \l__zitie_linewidth_dim }
+    \__zitie_aux_color_fill:
+    \color_stroke:n { zitieframecolor }
+    \tl_if_empty:NF \l__zitie_dash_pattern_tl { \exp_args:No \draw_dash_pattern:nn { \l__zitie_dash_pattern_tl } { 0pt } }
+    \exp_after:wN \draw_path_corner_arc:nn \l__zitie_frame_arc_tl
+    \__zitie_frame_type_c:n { \l_zitie_frame_type_tl } { 0 } { 0 } { \zitiewidth } { \zitieheight } { 1 } { 1 }
+    \draw_coffin_use:Nnn \l__zitie_box_coffin { l } { b }
+    \draw_end:
+  }
+\zitie_new_frame_construct:nn { 口 }
+  {
+    \draw_path_rectangle:nn { #1 , #2 } { #3 , #4 }
+    \cs_if_eq:NNTF \__zitie_aux_color_fill: \c_empty_tl
+      { \draw_path_use_clear:n { stroke } }
+      { \draw_path_use_clear:n { stroke , fill } }
+  }
+\zitie_new_frame_construct:nn { 十 }
+  {
+    \draw_path_moveto:n { (#3)/2 , #2 }
+    \draw_path_lineto:n { #3/2 , #4 }
+    \draw_path_moveto:n { #1 , (#4)/2 }
+    \draw_path_lineto:n { #3 , (#4)/2 }
+    \draw_path_use_clear:n { stroke }
+  }
+\zitie_new_frame_construct:nn { 田 }
+  {
+    \__zitie_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \__zitie_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+  }
+\zitie_new_frame_construct:nn { × }
+  {
+    \draw_path_moveto:n { #1 , #2 }
+    \draw_path_lineto:n { #3 , #4 }
+    \draw_path_moveto:n { #1 , #4 }
+    \draw_path_lineto:n { #3 , #2 }
+    \draw_path_use_clear:n { stroke }
+  }
+\zitie_new_frame_construct:nn { 咪 }
+  {
+    \__zitie_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \__zitie_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
+    \__zitie_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+  }
+\zitie_new_frame_construct:nn { 米 }
+  {
+    \__zitie_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
+    \__zitie_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+  }
+
+\NewDocumentCommand \zitienewfont { s } { \IfBooleanTF {#1} { \zitie_new_font:nnn } { \zitie_new_font:n } }
+\hook_new_pair:nn { zitie/framezi/before } { zitie/framezi/after }
+\NewDocumentCommand \framezi { s O{} m } 
+  { 
+    \group_begin:
+    \tl_if_empty:nF {#2} { \keys_set_filter:nnn { zitie } { geometry } {#2} }
+    \hook_use:n { zitie/framezi/before }
+    \bool_if:NTF \l__zitie_savefontname_bool
+      { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
+      { \tl_gset_eq:NN \zitiefontname \c_empty_tl }
+    \IfBooleanTF {#1}
+      { \tl_map_inline:Nn #3 { \zitie_single_construct:N ##1 \allowbreak } }
+      { \tl_map_inline:nn {#3} { \zitie_single_construct:N ##1 \allowbreak } }
+    \hook_use:n { zitie/framezi/after }
+    \group_end:
+  }
+\hook_new_pair:nn { zitie/framerange/before } { zitie/framerange/after }
+\hook_new:n { zitie/framerange/range }
+\NewDocumentCommand \framerange { O{} m }
+  {
+    \group_begin:
+    \tl_if_empty:nF {#1} { \keys_set_filter:nnn { zitie } { geometry } {#1} }
+    \hook_use:n { zitie/framerange/before }
+    \bool_if:NTF \l__zitie_savefontname_bool
+      { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
+      { \tl_gset_eq:NN \zitiefontname \c_empty_tl }
+    \clist_map_inline:nn {#2}
+      {
+        \str_if_eq:nnF {##1} { -> }
+          { 
+            \__zitie_frame_range_aux:Nnw \__zitie_check_num_range:nnNN {##1} 
+              \l__zitie_begin_int \l__zitie_end_int
+            \__zitie_int_until_do:nn { \l__zitie_begin_int > \l__zitie_end_int }
+              {
+                \group_begin:
+                \tl_set:Nf \l__zitie_curr_char_tl { \tex_Uchar:D \l__zitie_begin_int }
+                \__zitie_single_construct_o:N \l__zitie_curr_char_tl 
+                \group_end: \allowbreak
+                \int_incr:N \l__zitie_begin_int
+              } 
+          }
+        \hook_use:n { zitie/framerange/range }
+      }
+    \hook_use:n { zitie/framerange/after }
+    \group_end:
+  }
+\NewDocumentCommand \__zitie_frame_range_aux:Nnw { m >{ \SplitArgument { 1 } { -> } } m } { #1 #2 }
+
+\cs_new:Npn \__zitie_construct_loop:N #1
+  { 
+    \tl_if_eq:nnTF #1 \par { \par \hook_use:n { zitie/zitieframe/par } \__zitie_construct_loop:N }
+      { \quark_if_nil:nF {#1} { \zitie_single_construct:N #1 \allowbreak \__zitie_construct_loop:N } } 
+  }
+\hook_new_pair:nn { zitie/zitieframe/before } { zitie/zitieframe/after }
+\hook_new:n { zitie/zitieframe/par }
+\NewDocumentEnvironment { zitieframe } { G{} !O{} +b }
+  {
+    \group_begin:
+    \lineskip=0pt \parindent=0pt \parskip=0pt
+    \tl_if_empty:nF {#2} { \keys_set:nn { zitie } {#2} }
+    #1
+    \hook_use:n { zitie/zitieframe/before }
+    \bool_if:NTF \l__zitie_savefontname_bool
+      { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
+      { \tl_gset_eq:NN \zitiefontname \c_empty_tl }
+    \__zitie_construct_loop:N #3 \q_nil
+  } { \hook_use:n { zitie/zitieframe/after } \group_end: }
+
+\hook_new_pair:nn { zitie/framezifile/before } { zitie/framezifile/after }
+\NewDocumentCommand \framezifile { s O{} m }
+  {
+    \group_begin:
+    \tl_if_empty:nF {#2} { \keys_set_filter:nnn { zitie } { geometry } {#2} }
+    \hook_use:n { zitie/framezifile/before }
+    \bool_if:NTF \l__zitie_savefontname_bool
+      { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
+      { \tl_gset_eq:NN \zitiefontname \c_empty_tl }
+    \IfBooleanTF {#1}
+      {
+        \file_get:nnN {#3} { } \l__zitie_file_chars_tl
+        \tl_map_inline:Nn \l__zitie_file_chars_tl { \zitie_single_construct:N ##1 \allowbreak }
+      }
+      {
+        \ior_open:Nn \g__zitie_file_read_ior {#3}
+        \ior_map_inline:Nn \g__zitie_file_read_ior
+          { \tl_map_inline:nn {##1} { \zitie_single_construct:N ####1 \allowbreak } }
+        \ior_close:N \g__zitie_file_read_ior
+      }
+    \hook_use:n { zitie/framezifile/after }
+    \group_end:
+  }
+
+
+\if_bool:N \g__zitie_enable_background_bool
+%%% module background
+\dim_new:N \g__zitie_background_lmargin_dim
+\dim_new:N \g__zitie_background_tmargin_dim
+\dim_new:N \g__zitie_background_rmargin_dim
+\dim_new:N \g__zitie_background_bmargin_dim
+\dim_new:N \g__zitie_background_boxwidth_dim
+\dim_new:N \g__zitie_background_boxheight_dim
+\skip_new:N \g__zitie_background_boxcol_skip
+\skip_new:N \g__zitie_background_boxrow_skip
+\dim_new:N \g__zitie_background_framewidth_dim
+\dim_new:N \g__zitie_background_frameheight_dim
+\dim_new:N \g__zitie_background_x_left_dim
+\dim_new:N \g__zitie_background_x_right_dim
+\dim_new:N \g__zitie_background_y_top_dim
+\dim_new:N \g__zitie_background_y_bottom_dim
+\bool_new:N \g__zitie_background_colnum_bool
+\bool_new:N \g__zitie_background_rownum_bool
+\int_new:N \g__zitie_background_colboxes_int
+\int_new:N \g__zitie_background_rowboxes_int
+\dim_new:N \g__zitie_background_linewidth_dim
+\cs_new_nopar:Npn \__zitie_background_aux_color_fill: { }
+\keys_define:nn { zitie } { background .meta:nn = { zitie/background } {#1} }
+\NewDocumentCommand \zitiebackground { O{} } 
+  {  
+    \keys_set:nn { zitie/background } {#1}
+    \__zitie_background_typeset:
+  }
+\keys_define:nn { zitie/background }
+  {
+    typeset .choice: ,
+    typeset / true .code:n = { \cs_gset:Npn \__zitie_background_typeset: { \zitie_set_background_frame: } } ,
+    typeset / false .code:n = { \cs_gset:Npn \__zitie_background_typeset: { \zitie_unset_background_frame: } } ,
+    typeset / next .code:n = 
+      { 
+        \cs_gset:Npn \__zitie_background_typeset: 
+          { \zitie_unset_background_frame: \zitie_set_next_background_frame: }
+       } ,
+    typeset / none .code:n = { \cs_gset:Npn \__zitie_background_typeset: { } } ,
+    true .meta:n = { typeset = true } ,
+    false .meta:n = { typeset = false } ,
+    next .meta:n = { typeset = next } ,
+    none .meta:n = { typeset = none } ,
+    lmargin .dim_gset:N = \g__zitie_background_lmargin_dim ,
+    tmargin .dim_gset:N = \g__zitie_background_tmargin_dim ,
+    rmargin .dim_gset:N = \g__zitie_background_rmargin_dim ,
+    bmargin .dim_gset:N = \g__zitie_background_bmargin_dim ,
+    margin .code:n = 
+      { 
+        \if_case:w \clist_count:n {#1} \exp_stop_f:
+          \dim_gset:Nn \g__zitie_background_lmargin_dim { 0pt }
+          \dim_gset:Nn \g__zitie_background_tmargin_dim { 0pt }
+          \dim_gset:Nn \g__zitie_background_rmargin_dim { 0pt }
+          \dim_gset:Nn \g__zitie_background_bmargin_dim { 0pt }
+        \or:
+          \dim_gset:Nn \g__zitie_background_lmargin_dim {#1}
+          \dim_gset:Nn \g__zitie_background_tmargin_dim {#1}
+          \dim_gset:Nn \g__zitie_background_rmargin_dim {#1}
+          \dim_gset:Nn \g__zitie_background_bmargin_dim {#1}
+        \or:
+          \dim_gset:Nn \g__zitie_background_lmargin_dim { \clist_item:nn {#1} { 1 } }
+          \dim_gset:Nn \g__zitie_background_tmargin_dim { \clist_item:nn {#1} { 2 } }
+          \dim_gset:Nn \g__zitie_background_rmargin_dim { \clist_item:nn {#1} { 1 } }
+          \dim_gset:Nn \g__zitie_background_bmargin_dim { \clist_item:nn {#1} { 2 } }
+        \or:
+          \dim_gset:Nn \g__zitie_background_lmargin_dim { \clist_item:nn {#1} { 1 } }
+          \dim_gset:Nn \g__zitie_background_tmargin_dim { \clist_item:nn {#1} { 2 } }
+          \dim_gset:Nn \g__zitie_background_rmargin_dim { \clist_item:nn {#1} { 1 } }
+          \dim_gset:Nn \g__zitie_background_bmargin_dim { \clist_item:nn {#1} { 2 } }
+        \else:
+          \dim_gset:Nn \g__zitie_background_lmargin_dim { \clist_item:nn {#1} { 1 } }
+          \dim_gset:Nn \g__zitie_background_tmargin_dim { \clist_item:nn {#1} { 2 } }
+          \dim_gset:Nn \g__zitie_background_rmargin_dim { \clist_item:nn {#1} { 3 } }
+          \dim_gset:Nn \g__zitie_background_bmargin_dim { \clist_item:nn {#1} { 4 } }
+        \fi:
+      } ,
+    colnum .bool_gset:N = \g__zitie_background_colnum_bool ,
+    rownum .bool_gset:N = \g__zitie_background_rownum_bool ,
+    colboxes .int_gset:N = \g__zitie_background_colboxes_int ,
+    rowboxes .int_gset:N = \g__zitie_background_rowboxes_int ,
+    framewidth .dim_gset:N = \g__zitie_background_framewidth_dim ,
+    frameheight .dim_gset:N = \g__zitie_background_frameheight_dim ,
+    boxwidth .dim_gset:N = \g__zitie_background_boxwidth_dim ,
+    boxheight .dim_gset:N = \g__zitie_background_boxheight_dim ,
+    onpaper .meta:n = { frameheight = \paperheight , framewidth = \paperwidth } ,
+    onpaper .value_forbidden:n = true ,
+    ontext .meta:n = { frameheight = \textheight , framewidth = \textwidth } ,
+    ontext .value_forbidden:n = true ,
+    
+    xrange .code:n = 
+      { 
+        \dim_gset:Nn \g__zitie_background_x_left_dim { \clist_item:nn {#1} {1} } 
+        \dim_gset:Nn \g__zitie_background_x_right_dim { \clist_item:nn {#1} {2} } 
+      } ,
+    yrange .code:n = 
+      { 
+        \dim_gset:Nn \g__zitie_background_y_top_dim { \clist_item:nn {#1} {1} }
+        \dim_gset:Nn \g__zitie_background_y_bottom_dim { \clist_item:nn {#1} {2} }
+      } ,
+    frametype .tl_gset:N = \g__zitie_background_frametype_tl ,
+    linewidth .dim_gset:N = \g__zitie_background_linewidth_dim ,
+    framecolor .code:n = { \zitie_color_set:nn { zitiebackgroundframecolor } {#1} } ,
+    framecolor* .code:n = { \zitie_color_set:nnn { zitiebackgroundframecolor } #1 } ,
+    fillcolor .code:n = 
+      { 
+        \exp_args:Nx \tl_if_empty:nTF {#1}
+          { 
+            \zitie_color_set:nn { zitiebackgroundfillcolor } { white } 
+            \cs_gset_nopar:Npn \__zitie_background_aux_color_fill: { } 
+          }
+          { 
+            \zitie_color_set:nn { zitiebackgroundfillcolor } {#1}
+            \cs_gset_nopar:Npn \__zitie_background_aux_color_fill: { \color_fill:n {#1} } 
+          }
+      } ,
+    fillcolor* .code:n = 
+      { 
+        \zitie_color_set:nnn { zitiebackgroundfillcolor } #1
+        \cs_gset_nopar:Npn \__zitie_background_aux_color_fill: { \color_fill:nn #1 } 
+      } ,
+    dashpattern .tl_gset:N = \g__zitie_background_dash_pattern_tl ,
+  }
+
+\keys_set:nn { zitie/background }
+  {
+    typeset = none,
+    margin = { 0pt, 0pt, 0pt, 0pt },
+    colnum = false,
+    rownum = false,
+    colboxes = 1,
+    rowboxes = 1,
+    onpaper,
+    xrange = { 0cm, \paperwidth } ,
+    yrange = { 0cm, \paperheight } ,
+    frametype = none,
+    linewidth = 0.4pt,
+    framecolor = black,
+    dashpattern = { },
+  }
+
+\cs_new:Npn \zitie_set_background_frame:
+  {
+    \__zitie_background_calc:
+    \__zitie_background_construct:nnn { background } 
+      { \g__zitie_background_x_left_dim-.5\g__zitie_background_linewidth_dim }
+      { -\g__zitie_background_y_bottom_dim-.5\g__zitie_background_linewidth_dim }
+  }
+\cs_new:Npn \zitie_set_next_background_frame:
+  {
+    \__zitie_background_calc:
+    \__zitie_background_next_construct:nnn { background }
+      { \g__zitie_background_x_left_dim-.5\g__zitie_background_linewidth_dim }
+      { -\g__zitie_background_y_bottom_dim-.5\g__zitie_background_linewidth_dim }
+  }
+\cs_new:Npn \zitie_unset_background_frame:
+  { \__zitie_unset_background_frame:n { background } }
+\cs_new:Npn \__zitie_background_calc:
+  {
+    \zitie_dim_gezero_dispatch:NNnnnn 
+      \g__zitie_background_boxheight_dim 
+      \g__zitie_background_boxwidth_dim
+      { \use_none:nn } { \use_ii:nn } { \use_i:nn } { \use:nn }
+        {
+          \dim_set:Nn \g__zitie_background_boxheight_dim
+            { \g__zitie_background_frameheight_dim/\g__zitie_background_rowboxes_int }
+        }
+        {
+          \dim_set:Nn \g__zitie_background_boxwidth_dim 
+            { \g__zitie_background_framewidth_dim/\g__zitie_background_colboxes_int } 
+        }
+  }
+\cs_new_protected:Npn \__zitie_background_construct:nnn #1#2#3
+  {
+    \hook_gput_code:nnn { shipout/#1 } { zitie/background }
+      { \put ( \dim_eval:n {#2} , \dim_eval:n {#3} ) { \__zitie_background_construct_draw: } }
+  }
+\cs_new_protected:Npn \__zitie_background_construct:nnnn #1#2#3#4
+  {
+    \hook_gput_code:nnn { shipout/#1 } { zitie/background/#2 }
+      { \put ( \dim_eval:n {#3} , \dim_eval:n {#4} ) { \__zitie_background_construct_draw: } }
+  }
+\cs_new_protected:Npn \__zitie_background_next_construct:nnn #1#2#3
+  {
+    \hook_gput_next_code:nn { shipout/#1 }
+      { \put ( \dim_eval:n {#2} , \dim_eval:n {#3} ) { \__zitie_background_construct_draw: } }
+  }
+\cs_new:Npn \__zitie_unset_background_frame:n #1
+  { \hook_gremove_code:nn { shipout/#1 } { zitie/background } }
+\cs_new:Npn \__zitie_unset_background_frame:nn #1#2
+  { \hook_gremove_code:nn { shipout/#1 } { zitie/background/#2 } }
+\cs_new:Npn \__zitie_background_frame_type:n #1 { __zitie_background_frame_ #1 :nnnnnn }
+\cs_new:Npn \__zitie_background_frame_type_c:n #1 { \use:c { __zitie_background_frame_ #1 :nnnnnn } }
+\cs_new:Npn \__zitie_background_construct_draw:
+  {
+    \draw_begin:
+    \tl_if_empty:NF \g__zitie_background_dash_pattern_tl 
+      { \exp_args:No \draw_dash_pattern:nn { \g__zitie_background_dash_pattern_tl } { 0pt } }
+    \draw_linewidth:n { \g__zitie_background_linewidth_dim }
+    \__zitie_background_aux_color_fill:
+    \color_stroke:n { zitiebackgroundframecolor }
+    \__zitie_background_frame_type_c:n { \g__zitie_background_frametype_tl }
+      { 0cm } { 0cm } 
+      { \g__zitie_background_x_right_dim - \g__zitie_background_x_left_dim }
+      { \g__zitie_background_y_bottom_dim - \g__zitie_background_y_top_dim }
+      { \g__zitie_background_boxwidth_dim } 
+      { \g__zitie_background_boxheight_dim }
+    \draw_end:
+  }
+\cs_new:Npn \zitie_background_new_frame_construct:nn #1
+  { \cs_set:cn { \__zitie_background_frame_type:n {#1} } }
+\int_new:N \l__zitie_background_tmpa_int
+\int_new:N \l__zitie_background_tmpb_int
+\fp_new:N \l__zitie_background_tmpa_fp
+\fp_new:N \l__zitie_background_tmpb_fp
+\zitie_background_new_frame_construct:nn { none } { }
+\zitie_background_new_frame_construct:nn { 口 }
+  {
+    \cs_if_eq:NNF \__zitie_background_aux_color_fill: \c_empty_tl
+      { 
+        \draw_path_rectangle:nn { #1 , #2 } { #3 , #4 }
+        \draw_path_use_clear:n { stroke , fill } 
+      }
+    \dim_step_inline:nnnn {#1} {#5} {#3+\g__zitie_background_linewidth_dim}
+      {
+        \draw_path_moveto:n { ##1 , #2 }
+        \draw_path_lineto:n { ##1 , #4 }
+      }
+    \dim_step_inline:nnnn {#2} {#6} {#4+\g__zitie_background_linewidth_dim}
+      {
+        \draw_path_moveto:n { #1 , ##1 }
+        \draw_path_lineto:n { #3 , ##1 }
+      }
+    \draw_path_use_clear:n { stroke }
+  }
+\zitie_background_new_frame_construct:nn { 十 }
+  {
+    \dim_step_inline:nnnn {#1+.5#5} {#5} {#3}
+      {
+        \draw_path_moveto:n { ##1 , #2 }
+        \draw_path_lineto:n { ##1 , #4 }
+      }
+    \dim_step_inline:nnnn {#2+.5#6} {#6} {#4}
+      {
+        \draw_path_moveto:n { #1 , ##1 }
+        \draw_path_lineto:n { #3 , ##1 }
+      }
+    \draw_path_use_clear:n { stroke }
+  }
+\zitie_background_new_frame_construct:nn { 田 }
+  {
+    \__zitie_background_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \__zitie_background_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+  }
+\zitie_background_new_frame_construct:nn { × }
+  {
+    \int_set:Nn \l__zitie_background_tmpa_int { \fp_to_int:n { ceil( \dim_ratio:nn {(#3)-(#1)} {#5} ) } }
+    \int_set:Nn \l__zitie_background_tmpb_int { \fp_to_int:n { ceil( \dim_ratio:nn {(#4)-(#2)} {#6} ) } }
+    \if_int_compare:w \l__zitie_background_tmpa_int < \l__zitie_background_tmpb_int
+      \__zitie_background_frame_construct_aux_cross:nnnnnnnn 
+        {#1} {#2} {#3} {#4} {#5} {#6} { \l__zitie_background_tmpb_int } { }
+    \else:
+      \__zitie_background_frame_construct_aux_cross:nnnnnnnn 
+        {#1} {#2} {#3} {#4} {#5} {#6} { \l__zitie_background_tmpa_int } { }
+    \fi:
+    \draw_path_use_clear:n { stroke }
+  }
+\cs_new:Npn \__zitie_background_frame_construct_aux_cross:nnnnnnnn #1#2#3#4#5#6#7#8
+  {
+    \int_step_inline:nn {#7}
+      {
+        \draw_path_moveto:n { #1 , #2 + ##1*(#6) }
+        \draw_path_lineto:n { #1 + ##1*#5 , #2 }
+      }
+    \int_step_inline:nn {#7}
+      {
+        \draw_path_moveto:n { #1+#7*(#5) , #2+#7*(#6)-##1*(#6) }
+        \draw_path_lineto:n { #1+#7*(#5)-##1*(#5) , #2+#7*(#6) }
+      }
+    \int_step_inline:nn {#7}
+      {
+        \draw_path_moveto:n { #1+#7*(#5)-##1 #5 , #2 }
+        \draw_path_lineto:n { #1+#7*(#5) , #2+(##1)*#6 }
+      }
+    \int_step_inline:nn {#7}
+      {
+        \draw_path_moveto:n { #1 , #2+#7*#6-##1*(#6) }
+        \draw_path_lineto:n { #1+##1*(#5) , #2+#7*(#6) }
+      }
+  }
+\zitie_background_new_frame_construct:nn { 米 }
+  {
+    \__zitie_background_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \__zitie_background_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
+  }
+\zitie_background_new_frame_construct:nn { 咪 }
+  {
+    \__zitie_background_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \__zitie_background_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \__zitie_background_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
+  }
+%%% end of background
+\else:
+\msg_new:nnn { zitie } { background } 
+  { `background'~ unenable.~ You~ must~ use~ `enable-background'~ when~ loading~ this~ package. }
+\keys_define:nn { zitie } { background .code:n = \msg_error:nn { zitie } { background } }
+\fi:
+
+
+\if_bool:N \g__zitie_enable_zhlipsum_bool
+\RequirePackage { zhlipsum }
+%%% module zhlipsum
+\cs_new:Npn \__zitie_zhlipsum_paras:nn #1#2 { c__zhlipsum_ #1 @ #2 _tl }
+\hook_new_pair:nn { zitie/framezhlipsum/before } { zitie/framezhlipsum/after }
+\hook_new:n { zitie/framezhlipsum/paragraph }
+\NewDocumentCommand \framezhlipsum { O{} m >{ \TrimSpaces } O{simp} }
+  {
+    \group_begin:
+    \zhlipsum_if_exist:nTF {#3}
+      {
+        \tl_if_empty:nF {#1} { \keys_set_filter:nnn { zitie } { geometry } {#1} }
+        \hook_use:n { zitie/framezhlipsum/before }
+        \bool_if:NTF \l__zitie_savefontname_bool
+          { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
+          { \tl_gset_eq:NN \zitiefontname \c_empty_tl }
+        \__zhlipsum_parse_par:nn {#3} {#2}
+        \seq_if_empty:NF \l__zhlipsum_par_num_seq
+          {
+            \seq_pop_right:NN \l__zhlipsum_par_num_seq \l__zhlipsum_tmpa_tl
+            \seq_map_inline:Nn \l__zhlipsum_par_num_seq
+              {
+                \tl_map_inline:cn { \__zitie_zhlipsum_paras:nn {#3} {##1} }
+                  { \zitie_single_construct:N ####1 \allowbreak }
+                \hook_use:n { zitie/framezhlipsum/paragraph }
+              }
+            \tl_map_inline:cn { \__zitie_zhlipsum_paras:nn {#3} { \l__zhlipsum_tmpa_tl } }
+              { \zitie_single_construct:N ##1 \allowbreak }
+          }
+        \hook_use:n { zitie/framezhlipsum/after }
+      }
+      { \__zhlipsum_error:nn { invalid-name } {#3} }
+    \group_end:
+  }
+%%%
+\else:
+\msg_new:nnn { zitie } { zhlipsum } 
+  { `zhlipsum'~ unenable.~ You~ must~ use~ `enable-zhlipsum'~ option~ when~ loading~ this~ package. }
+\keys_define:nn { zitie } 
+  { zhlipsum .code:n = \msg_error:nn { zitie } { zhlipsum } }
+\fi:

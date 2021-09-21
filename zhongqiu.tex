@@ -1,0 +1,78 @@
+\documentclass[a4paper]{article}
+\usepackage{zhlipsum}
+\usepackage[enable-background]{zitie}
+\usepackage[textheight=25.6cm,textwidth=18.2cm,bottom=2cm]{geometry}
+
+\makeatletter
+\def\@oddfoot{\hfil\ifx\zitiefontname\empty\relax\else\zitiefontname--\fi\thepage\hfil}
+\let\@evenfoot\@oddfoot
+\makeatother
+
+\special{pdf:docinfo << /Author (Longaster) /Creator (LaTeX, XeTeX) /FontDesigner ([Beijing ZhongYi Electronics Co.] [Beijing Founder Electronics Co.]) /FZFontLink (https://www.foundertype.com/heji_i/190/) >>}
+
+
+\zitienewfont{
+  {黑体}{SimHei},
+  {方正小篆}{FZXiaoZhuanTi-S13T},
+  {褚遂良楷简}{FZChuSuiLiangkaiShuS},
+  {董其昌行简}{FZDongQiChangXingShuS},
+  {李邕行简}{FZLiYongXingShuS},
+  {柳公权楷简}{FZLiuGongQuanKaiShuS},
+  {米芾行简}{FZMiFuXingShuS},
+  {启功行楷简}{FZQiGongXingKaiS},
+  {苏轼行简繁}{FZSuShiXingShuJF},
+  {孙过庭草繁}{FZSunGuoTingCaoShuFU}{FallBack=SimHei},
+  {文征明行草简繁}{FZWenZhengMingXingCaoJF},
+  {颜真卿楷简繁}{FZYanZhenQingKaiShuJF},
+  {赵佶瘦金简繁}{FZZhaoJiShouJinShuJF},
+  {赵孟頫行简繁}{FZZhaoMengFuXingShuJF},
+}
+
+\begin{document}
+\raggedright
+\raggedbottom
+\parindent=0pt
+\lineskip=0pt
+
+\zitiesetup{
+  resize=square,frametype=咪,framecolor=green!60!black,
+  charcolor=red!70!black,fillcolor=black,savefontname,
+  punctuation=onlast,font,
+}
+
+\thispagestyle{empty}
+\zitieCJKfamily{苏轼行简繁}
+\framezi[width=2.7cm]{水调歌头}
+\framezi[width=1cm,fillcolor={},frametype=米]{明月几时有}
+\framezi[width=.8cm,fillcolor={},charcolor=black,frametype=田]{苏轼}
+
+\begin{zitieframe}[width=1.8cm,]
+明月几时有，把酒问青天。不知天上宫阙，今夕是何年。我欲乘风归去，又恐琼楼玉宇，高处不胜寒。起舞弄清影，何似在人间。
+
+转朱阁，低绮户，照无眠。不应有恨，何事长向别时圆。人有悲欢离合，月有阴晴圆缺，此事古难全。但愿人长久，千里共婵娟。
+\end{zitieframe}
+
+\clearpage
+\zitiebackground[
+  true,
+  frametype=米,framecolor=green!60!black,
+  colboxes=20,rowboxes=25,
+]
+
+\zitiesetup{resize=square,width=2.5cm}
+\framezi[font=宋体]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=赵佶瘦金简繁]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=褚遂良楷简]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=李邕行简]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=颜真卿楷简繁]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=柳公权楷简]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=启功行楷简]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=赵孟頫行简繁]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=苏轼行简繁]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=董其昌行简]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=米芾行简]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=文征明行草简繁]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+\framezi[font=孙过庭草繁]{我欲乘風向北行雪落軒轅大如席我欲借船向東游綽約仙子迎風立我欲踏云千萬裏廟堂龍吟奈我何昆侖之巔沐日光滄海絕境見青山長風萬裏燕歸來不見天涯人不回}\clearpage
+\framezi[font=方正小篆]{我欲乘风向北行雪落轩辕大如席我欲借船向东游绰约仙子迎风立我欲踏云千万里庙堂龙吟奈我何昆仑之巅沐日光沧海绝境见青山长风万里燕归来不见天涯人不回}\clearpage
+
+\end{document}
