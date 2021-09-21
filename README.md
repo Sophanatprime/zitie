@@ -1,5 +1,7 @@
-# zitie
-LaTeX package for CJK calligraphy practicing
+# zitie 字帖
+LaTeX package for make CJK calligraphy practicing sheet
+
+生成字帖临摹纸的LaTeX宏包。
 
 `\framezi*[<options>]{<chars>}`
 
@@ -25,7 +27,7 @@ options and other macro see the source: `zitie.sty`.
 
 Currently, only support XeTeX. 目前仅支持 XeTeX
 
-Dependence: `LaTeX2e 2020-10-01` and after, `l3draw`, please note that `l3draw` is very experimental, maybe cannot use later.
+Dependence: `LaTeX2e 2020-10-01` and after, `l3draw`, please note that `l3draw` is very experimental, some functions maybe cannot use later.
 
 依赖 `l3draw`，不依赖 `pgf` 模块。注意：`l3draw` 目前仍然是实验性的，往后版本可能无法使用。
 
