@@ -1,0 +1,531 @@
+\PassOptionsToPackage{AutoFallBack}{xeCJK}
+\documentclass{ctxdoc}
+\usepackage[enable-zhlipsum,enable-background]{zitie}
+\usepackage{geometry}
+
+\NewDocumentCommand{\init}{+v}{\hspace{\fill}初始值~=~\textcolor{blue}{\bfseries#1}}
+
+\IfFontExistsTF{KaiTi}{\zitienewfont{{楷体}{KaiTi}}}{}
+\IfFontExistsTF{FZSunGuoTingCaoShuFU}{\zitienewfont{{孙过庭草繁}{FZSunGuoTingCaoShuFU}{FallBack=SimSun}}}{}
+\IfFontExistsTF{FZWenZhengMingXingCaoJF}{\zitienewfont{{文征明行草简繁}{FZWenZhengMingXingCaoJF}{FallBack=KaiTi}}}{}
+
+\zitiesetup{
+  framecolor=green!60!black,charcolor=red!65!black,
+  resize=square,frametype=咪,font,savefontname,
+}
+\title{\texorpdfstring{\framezi[width=3\ccwd,fillcolor=black,charcolor=red!75!black,font=文征明行草简繁]{字帖}\framezi[width=2\ccwd,font=楷体]{宏包}}{zitie宏包}}
+\date{\texorpdfstring{\framezi[width=2\ccwd,font=文征明行草简繁]{农历二〇二一年八月十五}}{农历二〇二一年八月十五} v1.0}
+\author{雾月, Longaster}
+
+\begin{document}
+
+\newgeometry{textheight=27cm,textwidth=17cm,bottom=1.7cm}
+\maketitle
+\thispagestyle{empty}
+
+\parskip=0pt \parindent=0pt \lineskip=0pt \raggedright
+\begin{zitieframe}[
+  width=1.8cm,punctuation=onlast,
+  fillcolor=black,charcolor=red!75!black,font=文征明行草简繁,
+]
+  我欲乘風向北行，
+  雪落軒轅大如席。
+  我欲借船向東游，
+  綽約仙子迎風立。
+  我欲踏云千萬裏，
+  廟堂龍吟奈我何。
+  昆侖之巔沐日光，
+  滄海絕境見青山。
+  長風萬裏燕歸來，
+  不見天涯人不回。
+\end{zitieframe}
+
+\bigskip
+
+\zitienewrule{punctuation}{package1}{\makebox[\zitiewidth][l]{ \zitieCJKfamily{\zitiefontname} #1}}
+\framezi[
+  width=2.5\ccwd,linewidth=.2pt,
+  dashpattern={1mm,.5mm},punctuation=package1,
+  fillcolor={},framecolor=red,charcolor=black,
+  font=孙过庭草繁,
+]{
+  我欲乘風向北行，
+  雪落軒轅大如席。
+  我欲借船向東游，
+  綽約仙子迎風立。
+  我欲踏云千萬裏，
+  廟堂龍吟奈我何。
+  昆侖之巔沐日光，
+  滄海絕境見青山。
+  長風萬裏燕歸來，
+  不見天涯人不回。
+}\hfill ——《少年歌行》
+
+{\heiti\small 注：本文档中的非商业的字体版权为原字体公司（北京方正有限公司及其它相关公司），此处使用该字体仅为显示该宏包的排版效果，不作商业用途。本文档\pkg{zitie.tex}和相应的\pkg{zitie.sty}源文件使用 \href{https://www.latex-project.org/lppl/lppl-1-3c/}{LPPL 1.3c 协议。}}
+
+\clearpage
+\restoregeometry
+\setlength{\parindent}{2\ccwd}
+\lineskip=2bp
+\zitiebackground[
+  on,linewidth=.2pt,dashpattern={1mm,.5mm,2mm,1mm},
+  frametype=田,framecolor=green!80!black,
+  colboxes=20,rowboxes=30,
+]
+
+\pkg{zitie} 宏包是用纯 \LaTeX3 模块编写的（即，不加载 \pkg{pgf}、\pkg{pstricks} 等绘图宏包），来生成网格化的字、生成网格化的背景的宏包。绘图功能完全依赖 \pkg{l3draw}，但应注意 \pkg{l3draw} 目前仍然是实验性的，其接口在后续版本可能无法使用。
+
+\LaTeXe 版本应在 2020-10-01 及以后。
+
+目前仅支持 \XeTeX，待后续版本支持 \LuaTeX，不支持 \pdfTeX。
+
+\tableofcontents
+
+\section{\pkg{zitie} 宏包的加载和基本命令}\label{sec:basics}
+
+加载宏包：\tn{usepackage}\oarg{key-val}\verb|{zitie}|。\meta{key-val} 选项见以下几节。
+
+若要加载 \pkg{ctex} 宏包，请先加载 \pkg{ctex} 然后再加载 \pkg{zitie} 宏包。若加载本宏包时未加载 \pkg{ctex} 宏包，
+则会加载 \pkg{xeCJK} 宏包和 \pkg{ctexsize} 宏包。如果是Windows平台，还将设置宋体为主字体。
+
+\begin{function}{\zitienewfont,\zitieCJKfamily}
+  \begin{syntax}
+    \cs{zitienewfont} \{ \marg{font family} \marg{font name} , ... \}
+    \cs{zitienewfont} \{ \marg{font family} \marg{font name} \marg{features} , ... \}
+    \cs{zitienewfont} * \marg{font family} \marg{font name} \marg{font feature}
+    \cs{zitieCJKfamily} \marg{font family}
+    \cs{zitieCJKfamily}+ \marg{font family}
+    \cs{zitieCJKfamily}- \marg{font family}
+  \end{syntax}
+  这个命令用来加载和设置需要的字体，\meta{font family} 为在 \cs{framezi} 等命令的 \opt{font} 选项中使用的名字，也可通过 \cs{zitieCJKfamily} 来在文档中使用该字体。\meta{font name} 为字体的名字，\meta{features}，为 \pkg{fontspec} 宏包和 \pkg{xeCJK} 宏包支持的字体特性。
+
+  \cs{zitieCJKfamily} 和 \pkg{xeCJK} 宏包的 \cs{CJKfamily} 作用完全相同，只不过首先判断该 \meta{font family} 是否被 \cs{zitienewfont} 声明，若没有，则再使用 \cs{CJKfamily} 进行处理。
+\end{function}
+
+\begin{function}{\framezi,\framerange,\framezifile}
+  \begin{syntax}
+    \cs{framezi} * \oarg{key-val} \marg{字或词句}
+    \cs{framerange} \oarg{key-val} \marg{逗号分隔的16进制序列}
+    \cs{framezifile} * \oarg{key-val} \marg{文件名}
+  \end{syntax}
+  以上命令用来生成网格化的字。
+
+  \meta{字或词句} 应仅包含类代码为 11 或 12 的字符，即正常情况下输入的字符，不应包含 \TeX 控制序列即其它特殊字符。\cs{framezi} 带星号的版本接收一个控制序列，这个序列包含想要网格化的字。
+
+  \meta{逗号分隔的16进制序列} 应使用如下的形式：\verb|"4E00 -> "4E27, "4E30| 或 \verb|`一 -> `丢, `丰|，与其它设置字符序列的宏包相似（如 \pkg{xeCJK} 宏包的 \cs{xeCJKDeclareSubCJKBlock}）。注意，由于网格化操作需要大量的计算，因此单个 \meta{range} 不应太大，依据编译环境而定，一般不应超过 1000 个，否则可能无法成功编译。其它命令中也是如此。
+
+  \meta{文件名} 为想要网格化的文字的文件名。\cs{framezifile} 带 \verb|*| 的版本，可在 \meta{key-val} 中使用 \opt{filepath} 设置文件搜索路径，详见后节的说明。带星号和不带星号的版本实现略有差异，速度也可能不一样。
+\end{function}
+
+\begin{function}{
+  zitie/framezi/before, zitie/framezi/after,
+  zitie/framerange/before, zitie/framerange/after,
+  zitie/framerange/range,
+  zitie/framezifile/before, zitie/framezifile/after
+}
+  这三个命令还各自定义了钩子（hook），其中带有 \verb|after| 为 \verb|reversed|，即先添加的后执行。\verb|before| 为选项设置完成后执行，\verb|after| 为整个命令执行完之后执行。其中 \verb|zitie/framerange/range| 为每一个列表均执行一次，包括无效的和最后一次。
+
+  可以通过 \cs{AddToHook}、\cs{AddToHookNext}、\cs{RemoveFromHook} 来添加和执行，详细请参考 \pkg{source2e.pdf} 或 \pkg{lthooks} 的说明文档。
+\end{function}
+
+\begin{function}{zitieframe,
+  zitie/zitieframe/before, zitie/zitieframe/after,
+  zitie/zitieframe/par
+}
+  \begin{syntax}
+    \verb|\begin{zitieframe}| \oarg{key-val}
+    ~~...
+    \verb|\end{zitieframe}|
+    \verb|\begin{zitieframe}| \marg{initial material} \oarg{key-val}
+    ~~...
+    \verb|\end{zitieframe}|
+  \end{syntax}
+  可以在 \env{zitieframe} 环境中使用分段（显式的或隐式的，特殊命令仍然不可使用）。
+
+  \meta{initial material} 为在选项和钩子执行完毕之后要执行的内容。这里的内容不会被网格化。
+
+  \verb|zitie/zitieframe/par| 钩子为环境中的每个段落分段后要执行的命令。
+\end{function}
+
+\section{选项}\label{sec:options}
+
+以下选项在方框化命令的宏中是局部设置的。
+
+\begin{function}{basechar,zihao}
+  \begin{syntax}
+    basechar = \meta{CJK char} \init{好}
+    zihao = \meta{字号} \init{4}
+  \end{syntax}
+  \opt{basechar} 设置当 \opt{punctuation} 为 \opt{base} 类时的基字符，这个用来计算缩放比例，基字符不同时，即使给定相同的缩放比例，其实际缩放比例也可能不同。
+
+  \opt{zihao} 设置计算缩放比例时的字号大小。
+\end{function}
+
+\begin{function}{punctuation, punctuation*}
+  \begin{syntax}
+    punctuation = <ignore|leave|...> \init{ignore}
+    punctuation*= \marg{replace}
+  \end{syntax}
+  \pkg{zitie} 宏包对字符类型进行区分，对CJK字符和标点符号采用不同的处理方式。
+  该选项设置标点符号采用何种处理方式。初始情况下为 \opt{ignore}，即忽略该字符。
+
+  \opt{leave} 选项把该标点符号原样输出，不对其进行任何处理，字体和其它属性和正文相同。
+  
+  选项 \opt{punctuation*} 定义处理标点符号的方式为其值，可接收一个参数。如设置 \verb|punctuation*=\fbox{#1}|，则将标点符号放入 \tn{fbox} 内。
+  
+  若 \opt{punctuation} 并不存在，则将其值视为已定义的宏。如，假设 \verb|@gobble| 值并不存在，若使用 \verb|punctuation=@gobble|，则标点符号处理命令为 \tn{@gobble}，这是 \LaTeXe 定义的命令，其作用与 \verb|punctuation=ignore| 相同。
+  
+  还可使用 \cs{zitienewrule} 定义新的标点符号处理方式。详见 \cs{zitienewrule} 命令的说明。
+\end{function}
+\begin{texnote}
+  按照 \pkg{xeCJK} 宏包的字符分类，\pkg{zitie} 宏包将字符类别为 \verb|FullLeft|、\verb|FullRight|、\verb|HalfLeft|、\verb|HalfRight| 视为标点符号。将 \verb|CJK|视为CJK字符。
+\end{texnote}
+
+\begin{function}{frametype,resize}
+  \begin{syntax}
+    frametype = <none|口|十|田|米|咪|...> \init{none}
+    resize    = <none|real|base|square|...> \init{none}
+  \end{syntax}
+  \opt{frametype} 设置方框样式。可用值的效果正如选项值：\verb|口|--仅方框，\verb|十|--仅中间的横线和竖线，\verb|田|--常见的田字格，\verb|米|--十字格再加上斜的两条线，\verb|咪|--常见的米字格。还可自定义方框，详见第 \ref{sec:interface} 节。
+
+  {\zitiesetup{font=楷体,width=1cm,resize=square,framecolor=black,linewidth=.7pt}
+  \framezi[frametype=none]{无}
+  \framezi[frametype=口]{口}
+  \framezi[frametype=十]{十}
+  \framezi[frametype=田]{田}
+  \framezi[frametype=米]{米}
+  \framezi[frametype=咪]{咪}}
+
+  \opt{resize} 设置缩放方式，\opt{real}，使用字符实际宽高缩放，\opt{base}，使用 \opt{basechar} 设置的字符的宽高缩放，\opt{square}，使得字符的宽高相等再进行缩放。还可自定义缩放方式，详见第 \ref{sec:interface} 节。
+
+  以下为宽度设置为 1cm 时的缩放情况。
+  {\zitiesetup{font=楷体,width=1cm,frametype=咪,framecolor=black}
+  \framezi[resize=none]{无}
+  \framezi[resize=real]{实}
+  \framezi[resize=base]{基}
+  \framezi[resize=square]{方}}
+\end{function}
+
+\begin{function}{
+  xscale,yscale,scale,
+  width,height
+}
+  \begin{syntax}
+    xscale = \meta{scale ratio} \init{1}
+    yscale = \meta{scale ratio} \init{1}
+    scale  = \meta{scale ratio}
+    width  = \meta{dim}
+    height = \meta{dim}
+  \end{syntax}
+  设置缩放比例和盒子宽高。
+
+  宽高具有更高的优先级，即若比例和宽高都设置了，则使用宽高来计算。宽高为二者都为0cm视为未设置，二者有一大于0cm，视为设置了宽高。
+
+  此处的宽高和最终的宽高可能略有差异，最终的宽高保存在 \tn{zitiewidth} 和 \tn{zitieheight} dim寄存器中。
+\end{function}
+
+\begin{function}{
+  linewidth,
+  dashpattern,
+  framearc,
+  framearc*
+}
+  \begin{syntax}
+    linewidth   = \meta{dim} \init{0.4pt}
+    dashpattern = \meta{ dim1, dim2, ... }
+    framearc    = \meta{dim}
+    framearc*   = \{ \marg{dim1} \marg{dim2} \}
+  \end{syntax}
+\end{function}
+
+{\zitiesetup{width=2cm,framecolor=black,font=楷体}
+\verb|linewidth=1pt|：\framezi[linewidth=1pt]{好} \\
+\verb|dashpattern={1mm,2mm,3mm,4mm}|：\framezi[dashpattern={1.5mm,1mm,2mm,1.5mm}]{好} \\
+\verb|framearc=3mm,frametype=口|：\framezi[framearc=3mm,frametype=口]{好} \\
+\verb|framearc=3mm,frametype=咪|：\framezi[framearc=3mm,frametype=咪]{好} \\
+\verb|framearc*={3mm}{6mm},frametype=口|：\framezi[framearc*={3mm}{6mm},frametype=口]{好} \\
+\verb|framearc*={3mm}{6mm},frametype=咪|：\framezi[framearc*={3mm}{6mm},frametype=咪]{好}
+}
+
+\begin{function}{
+  framecolor,
+  framecolor*,
+  charcolor,
+  charcolor*,
+  fillcolor,
+  fillcolor*
+}
+  \begin{syntax}
+    framecolor  = \meta{color expr} \init{black}
+    framecolor* = \meta{model(s)} \meta{value(s)}
+    charcolor   = \meta{color expr} \init{black}
+    charcolor*  = \meta{model(s)} \meta{value(s)}
+    fillcolor   = \meta{color expr}
+    fillcolor*  = \meta{model(s)} \meta{value(s)}
+  \end{syntax}
+  命名的颜色仅支持 \LaTeX3 定义的 black, white, red, green, blue, cyan, magenta 和 yellow。颜色模型和表达式也应使用 \LaTeX3 支持的模型和表达式，详见 \pkg{interface3.pdf} 文档。
+
+  若要去掉 \opt{fillcolor}，应将其设置为空，即 \verb|fillcolor={}|，而不是将其设置为白色。
+\end{function}
+
+\begin{function}{
+  font,savefontname,
+  fallback,
+  fontbackfont,
+  fontbackfont*
+}
+  \begin{syntax}
+    font = \meta{font family} \init{宋体}
+    savefontname = \TTF \init{false}
+    fallback = \TTF \init{false}
+    fallbackfont = \marg{fallback font list}
+    fallbackfont+= \marg{fallback font list}
+  \end{syntax}
+  \opt{font} 设置盒子中使用的字体，若将其设置为空，即 \verb|font={}| 或 \verb|font|，则将使用正文字体。
+
+  \opt{savefontname} 设置是否保存字体名字，以便在后文使用，如在标点符号的处理中。
+
+  \opt{fallbackfont} 设置当当前字体中不存在此字形时，要使用哪些字体，字体必须被 \cs{zitienewfont} 或 \cs{newCJKfontfamily} 声明。
+  \opt{fallbackfont+} 将 \marg{fallback font list} 添加的之前的 \meta{fallback font list} 中。
+
+  注意，\opt{fallbackfont} 特性和 \pkg{xeCJK} 的 \verb|FallBack| 并不冲突，当 \opt{fallback font list} 中的所有字体没有对应的字形时，才会使用 \verb|FallBack| 定义的字体。这一特性可通过 \verb|fallback=false| 来关闭。
+\end{function}
+
+如在 \verb|FZSunGuoTingCaoShuFU|（方正孙过庭草书）字体中没有“一丁丂七丄”，
+虽然在在导言区使用 \verb|\zitienewfont{{孙过庭草繁}{FZSunGuoTingCaoShuFU}{FallBack=SimSun}| 设置其 \verb|FallBack| 字体为 \verb|SimSun|（宋体），但若设置 \verb|fallbackfont={楷体},fallback=true| 则会在楷体中查找是否有该字形，然后再在宋体中查找：
+
+\begin{verbatim}
+  \framezi[fallbackfont={楷体},width=1cm,font=孙过庭草繁,fallback]{一丁丂七丄}
+\end{verbatim}
+\framezi[fallbackfont={楷体},width=1cm,font=孙过庭草繁,fallback,framecolor=black]{一丁丂七丄}
+
+\begin{verbatim}
+  \framezi[width=1cm,font=孙过庭草繁,fallback]{一丁丂七丄}
+\end{verbatim}
+\framezi[width=1cm,font=孙过庭草繁,fallback,framecolor=black]{一丁丂七丄}
+
+\begin{function}{
+  \zitiesetup,
+  \zitiecolorlet,
+}
+  \begin{syntax}
+    \cs{zitiesetup} \marg{key-val}
+    \cs{zitiecolorlet} \marg {name} \oarg{model} \marg{value}
+  \end{syntax}
+  用于设置选项，定义新的颜色。注意，若加载 \pkg{xcolor} 不能使用 \tn{colorlet}命令，必须使用 \cs{zitiecolorlet} 来设置颜色。
+\end{function}
+
+\begin{function}{\zitienewrule}
+  \begin{syntax}
+    \cs{zitienewrule} \marg{option key} \marg{rule} \marg{replace}
+    \cs{zitienewrule} \oarg{arg nums} \marg{identifier} \marg{rule} \marg{replace}
+  \end{syntax}
+  为 \pkg{zitie} 宏包的键 \meta{option key} 定义新的处理规则。
+
+  \meta{arg nums} 为键预先定义的参数数目。
+
+  \pkg{zitie} 宏包使用了
+\begin{verbatim}
+  \zitienewrule{punctuation}{onlast}
+    {\penalty10000 \smash{\makebox[0pt]{%
+      \color{zitiecharcolor}\zitieCJKfamily{\zitiefontname}#1}}}
+\end{verbatim}
+和
+\begin{verbatim}
+  \zitienewrule{punctuation}{scale}{
+    \hbox_set:Nn \l_tmpa_box 
+      { 
+        \color_select:n { zitiecharcolor } \zitieCJKfamily{\zitiefontname} #1 }
+      \box_scale:Nnn \l_tmpa_box \zitiexscaleratio \zitieyscaleratio \box_use_drop:N \l_tmpa_box 
+  }
+\end{verbatim}
+
+定义了两个 \opt{punctuation} 处理规则：\opt{onlast} 和 \opt{scale}，这样就可以使用 \verb|punctuation=onlast| 和 \verb|punctuation=scale| 来对标点符号进行处理。
+\end{function}
+
+\begin{function}{
+  \zitiewidth,
+  \zitieheight,
+  \zitieboxwd,
+  \zitieboxht,
+  \zitieboxdp,
+  \zitiefontname,
+  \zitiexscaleratio,
+  \zitieyscaleratio,
+}
+  这些命令为全局设置的接口。
+\end{function}
+
+\begin{function}{
+  zitieframecolor,
+  zitiecharcolor,
+  zitiefillcolor,
+}
+  这些是全局保存的颜色名，可在 \pkg{xcolor} 宏包的 \tn{color} 命令 和 \LaTeX3 命令 \cs{color_select:n} 中使用。
+\end{function}
+
+
+\section{background}\label{sec:background}
+
+在宏包加载时使用 \opt{enable-background} 以启用该特性。
+
+\begin{function}{\zitiebackground}
+  \begin{syntax}
+    \cs{zitiebackground} \oarg{background key-val}
+  \end{syntax}
+  使用背景。
+\end{function}
+
+\pkg{background} 可用的键值：（设置是全局的）
+
+\begin{function}{true, on, false, off, next}
+  \opt{true} 和 \opt{on} 作用相同，表示设置网格背景。
+  \opt{false} 和 \opt{off} 作用相同，表示取消网格背景。
+  \opt{next} 表示下一次设置背景，即当前页设置背景。这个选项也将取消之前设置的背景。
+\end{function}
+
+\begin{function}{
+  colboxes,rowboxes,
+  framewidth,frameheight,
+  boxwidth,boxheight,
+  onpaper,ontext
+}
+  \begin{syntax}
+    colboxes    = \meta{integer} \init{1}
+    rowboxes    = \meta{integer} \init{1}
+    framewidth  = \meta{dim}
+    frameheight = \meta{dim}
+    boxwidth    = \meta{dim}
+    boxheight   = \meta{dim}
+    onpaper
+    ontext
+  \end{syntax}
+  设置背景格子的大小。
+
+  \opt{boxwidth} 和 \opt{boxheight} 具有更高的优先级，若设置了，则背景每个格子的宽高为所设置的值，否则，使用 \meta{framewidth}、\meta{frameheight} 及 \meta{colboxes}、\meta{rowboxes} 来计算大小。
+
+  \opt{onpaper} 设置 \verb|frameheight=\paperheight, framewidth=\paperwidth|，
+  \opt{ontext} 设置 \verb|frameheigh=\textheight, framewidth=\textwidth|。
+\end{function}
+
+\begin{function}{
+  frametype,
+  linewidth,
+  framecolor,
+  framecolor*,
+  fillcolor,
+  fillcolor*,
+  dashpattern
+}
+  和 \cs{framezi} 等命令的选项相同，但二者互不影响。
+
+  颜色分别保存在 \verb|zitiebackgroundframecolor|，\verb|zitiebackgroundfillcolor| 颜色名中。可在 \tn{color} 中直接使用，也可在 \cs{color_select:n} 中使用。
+\end{function}
+
+\begin{function}{xrange,yrange}
+  \begin{syntax}
+    xrange = \{ \meta{left} , \meta{right} \}
+    yrange = \{ \meta{top} , \meta{bottom} \}
+  \end{syntax}
+  设置网格显示的范围。注意这是实验性的，效果可能并不好。
+\end{function}
+
+本文档的设置为：
+\begin{verbatim}
+  \zitiebackground[
+    on, linewidth=0.2pt, dashpattern={1mm,.5mm,2mm,1mm},
+    frametype=田, framecolor=green!80!black,
+    colboxes=20, rowboxes=30,
+  ]
+\end{verbatim}
+
+\section{中文乱数假文}
+
+\pkg{zitie} 宏包完全兼容 \pkg{zhlipsum} 宏包。使用 \cs{newzhlipsum} 命令定义的假文也可使用。
+
+在加载宏包时使用 \opt{enable-zhlipsum} 以启用该特性。
+
+\begin{function}{
+  \framezhlipsum,
+  zitie/framezhlipsum/before,
+  zitie/framezhlipsum/after,
+  zitie/framezhlipsum/paragraph
+}
+  \begin{syntax}
+    \cs{framezhlipsum} \oarg{key-val} \marg{paragraph list} \oarg{name}
+  \end{syntax}
+  \meta{key-val} 为 \cs{framezi} 第 \ref{sec:options} 节定义的选项，\meta{paragraph list} 为段落列表，支持如下形式：\verb|6-8,-3,9|。\meta{name} 为假文的名字。可用值为 \opt{simp}、\opt{trad}、\opt{nanshanjing}、\opt{xiangyu}、\opt{zhufu}、\opt{aspirin}，详细说明参考 \pkg{zhlipsum} 宏包的说明文档。
+
+  定义了 \verb|zitie/framezhlipsum/before|、\verb|zitie/framezhlipsum/after|、\verb|zitie/framezhlipsum/paragraph| 三个钩子。其中 \verb|zitie/framezhlipsum/paragraph| 为假文间要执行的代码，如有5段，则在这5个段落中间格执行一次，即执行4次。其它两个钩子的用法和前述相似。
+\end{function}
+
+
+\section{编程接口}\label{sec:interface}
+
+\begin{function}{
+  \zitie_new_frame_construct:nn,
+  \zitie_frame_type:n,
+  \zitie_frame_type_c:n,
+  \zitie_new_resize_method:nn,
+  \zitie_new_font:n,
+  \zitie_new_font:nnn,
+}
+  创建新的构造器、resize方法和字体。
+\end{function}
+
+\begin{function}{
+  \zitie_new_process_rule:nnn,
+  \zitie_new_process_rule:nnnn,
+  \zitie_processor:n,
+  \zitie_processor_c:n,
+  \zitie_processor:nnn,
+  \zitie_processor_c:nnn,
+}
+  创建和使用处理器。
+\end{function}
+
+\begin{function}{
+  \zitie_color_select:nn,
+  \zitie_color_select:nnn,
+}
+  颜色选择。
+\end{function}
+
+\begin{function}{
+  \zitie_cjk_glyph_use:nN,
+  \zitie_token_class_dispatch:Nnnnn,
+  \zitie_token_class_dispatch_o:Nnnnn,
+  \zitie_token_class_dispatch_f:Nnnnn,
+}
+  字形选择和字符类别判断。
+\end{function}
+
+\begin{function}[TF]{
+  \zitie_token_if_punctuation:N,
+  \zitie_token_if_punctuation_o:N,
+  \zitie_token_if_punctuation_f:N,
+}
+  是否为标点符号。
+\end{function}
+
+\begin{function}{
+  \zitie_single_construct:N,
+  \zitie_single_construct:nN,
+}
+  构造单个字的方框。
+\end{function}
+
+\begin{function}{
+  \zitie_background_new_frame_construct:nn,
+  \zitie_background_frame_type:n,
+  \zitie_background_frame_type_c:n,
+}
+  创建和使用新的 background frame 类型。
+\end{function}
+
+
+\IndexLayout
+\zitiebackground[off]
+\PrintChanges
+\PrintIndex
+\end{document}

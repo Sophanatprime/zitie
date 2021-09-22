@@ -1,3 +1,4 @@
+%% license LPPL 1.3c, https://www.latex-project.org/lppl/lppl-1-3c/
 \NeedsTeXFormat{LaTeX2e}[2020/10/01]
 \RequirePackage{ xparse , l3keys2e }
 \RequirePackage{ l3draw }
@@ -7,20 +8,20 @@
   { \RequirePackage { ctexsize } \sys_if_platform_windows:T { \setCJKmainfont {SimSun} } }
 \@ifpackageloaded { xcolor }
   { 
-    \cs_set_nopar:Npn \zitie_color_set:nn #1#2 { \colorlet{#1}{#2} \color_set:nn {#1} {#2} } 
-    \cs_set_nopar:Npn \zitie_color_set:nnn #1#2#3 { \colorlet{#1}[#2]{#3} \color_set:nnn {#1} {#2} {#3} }
+    \cs_set_nopar:Npn \zitie_color_select:nn #1#2 { \colorlet{#1}{#2} \color_set:nn {#1} {#2} } 
+    \cs_set_nopar:Npn \zitie_color_select:nnn #1#2#3 { \colorlet{#1}[#2]{#3} \color_set:nnn {#1} {#2} {#3} }
   }
   { 
     \hook_gput_code:nnn { package/after/xcolor } { package } 
       { 
-        \cs_set_nopar:Npn \zitie_color_set:nn #1#2 { \colorlet{#1}{#2} \color_set:nn {#1} {#2} } 
-        \cs_set_nopar:Npn \zitie_color_set:nnn #1#2#3 { \colorlet{#1}[#2]{#3} \color_set:nnn {#1} {#2} {#3} }
+        \cs_set_nopar:Npn \zitie_color_select:nn #1#2 { \colorlet{#1}{#2} \color_set:nn {#1} {#2} } 
+        \cs_set_nopar:Npn \zitie_color_select:nnn #1#2#3 { \colorlet{#1}[#2]{#3} \color_set:nnn {#1} {#2} {#3} }
       } 
-    \cs_set_nopar:Npn \zitie_color_set:nn #1#2 { \color_set:nn {#1} {#2} }
-    \cs_set_nopar:Npn \zitie_color_set:nnn #1#2#3 { \color_set:nnn {#1} {#2} {#3} }
+    \cs_set_nopar:Npn \zitie_color_select:nn #1#2 { \color_set:nn {#1} {#2} }
+    \cs_set_nopar:Npn \zitie_color_select:nnn #1#2#3 { \color_set:nnn {#1} {#2} {#3} }
   }
 \NewDocumentCommand \zitiecolorlet { m o m }
-  { \IfNoValueTF {#2} { \zitie_color_set:nn {#1} {#3} } { \zitie_color_set:nnn {#1} {#2} {#3} } }
+  { \IfNoValueTF {#2} { \zitie_color_select:nn {#1} {#3} } { \zitie_color_select:nnn {#1} {#2} {#3} } }
 
 \box_new:N \l_zitie_basebox_box
 \tl_new:N \l_zitie_frame_type_tl
@@ -132,8 +133,8 @@
     \dim_set:Nn \l__zitie_char_width_dim { \box_wd:N \l_zitie_basebox_box }
     \dim_set:Nn \l__zitie_char_height_dim { \box_ht_plus_dp:N \l_zitie_basebox_box }
   }
-\cs_new_nopar:Npn \__zitie_frame_type:n #1 { __zitie_frame_construct_type_ #1 :nnnnnn } % x1, y1, x2, y2, x times, y times
-\cs_new_nopar:Npn \__zitie_frame_type_c:n #1 { \use:c { __zitie_frame_construct_type_ #1 :nnnnnn } }
+\cs_new_nopar:Npn \zitie_frame_type:n #1 { __zitie_frame_construct_type_ #1 :nnnnnn } % x1, y1, x2, y2, x times, y times
+\cs_new_nopar:Npn \zitie_frame_type_c:n #1 { \use:c { __zitie_frame_construct_type_ #1 :nnnnnn } }
 \cs_new_nopar:Npn \__zitie_resize:n #1 { __zitie_processor_resize_ #1 :w }
 \cs_new_nopar:Npn \__zitie_resize_c:n #1 { \use:c { __zitie_processor_resize_ #1 :w } }
 \cs_new_nopar:Npn \zitie_processor:n #1 { __zitie_processor_ #1 :w }
@@ -232,26 +233,26 @@
     height .dim_set:N = \l__zitie_box_height_dim ,
     linewidth .dim_set:N = \l__zitie_linewidth_dim ,
     linewidth .initial:n = 0.4pt ,
-    framecolor .code:n = { \zitie_color_set:nn { zitieframecolor } {#1} } ,
+    framecolor .code:n = { \zitie_color_select:nn { zitieframecolor } {#1} } ,
     framecolor .initial:n = black ,
-    framecolor* .code:n = { \zitie_color_set:nnn { zitieframecolor } #1 } ,
-    charcolor .code:n = { \zitie_color_set:nn { zitiecharcolor } {#1} } ,
+    framecolor* .code:n = { \zitie_color_select:nnn { zitieframecolor } #1 } ,
+    charcolor .code:n = { \zitie_color_select:nn { zitiecharcolor } {#1} } ,
     charcolor .initial:n = black ,
-    charcolor* .code:n = { \zitie_color_set:nnn { zitieframecolor } {#1} } ,
+    charcolor* .code:n = { \zitie_color_select:nnn { zitieframecolor } {#1} } ,
     color .meta:n = { framecolor = #1, charcolor = #1 } ,
     color* .meta:n = { framecolor* = #1, charcolor* = #1 } ,
     fillcolor .code:n = 
       { 
         \exp_args:Nx \tl_if_empty:nTF {#1}
-          { \zitie_color_set:nn { zitiefillcolor } { white } \cs_set_nopar:Npn \__zitie_aux_color_fill: { } }
+          { \zitie_color_select:nn { zitiefillcolor } { white } \cs_set_nopar:Npn \__zitie_aux_color_fill: { } }
           { 
-            \zitie_color_set:nn { zitiefillcolor } {#1}
+            \zitie_color_select:nn { zitiefillcolor } {#1}
             \cs_set_nopar:Npn \__zitie_aux_color_fill: { \color_fill:n {#1} } 
           }
       } ,
     fillcolor* .code:n = 
       { 
-        \zitie_color_set:nnn { zitiefillcolor } #1
+        \zitie_color_select:nnn { zitiefillcolor } #1
         \cs_set_nopar:Npn \__zitie_aux_color_fill: { \color_fill:nn #1 } 
       } ,
     dashpattern .tl_set:N = \l__zitie_dash_pattern_tl ,
@@ -297,7 +298,7 @@
   }
 \NewDocumentCommand \zitienewrule { O{1} >{\TrimSpaces} m m m } { \zitie_new_process_rule:nnnn {#2} {#3} {#1} {#4} }
 \zitie_new_process_rule:nnn { punctuation } { onlast }
-  { \smash{ \makebox[0pt]{ \color_select:n { zitiecharcolor } \zitieCJKfamily{\zitiefontname} #1 } } }
+  { \tex_penalty:D 10000\smash{ \makebox[0pt]{ \color_select:n { zitiecharcolor } \zitieCJKfamily{\zitiefontname} #1 } } }
 \zitie_new_process_rule:nnn { punctuation } { scale }
   { 
     \hbox_set:Nn \l_tmpa_box { \color_select:n { zitiecharcolor } \zitieCJKfamily{\zitiefontname} #1 }
@@ -347,7 +348,7 @@
 \cs_new:Npn \zitie_new_frame_construct:nn #1 
   { 
     \clist_put_right:Nn \g__zitie_frame_list_clist {#1}
-    \cs_new:cn { \__zitie_frame_type:n {#1} } 
+    \cs_new:cn { \zitie_frame_type:n {#1} } 
   }
 \zitie_new_frame_construct:nn { none } { }
 
@@ -479,9 +480,7 @@
       { \coffin_resize:Nnn \l__zitie_box_coffin \l__zitie_box_width_dim \l__zitie_box_height_dim }
       { \coffin_resize:Nnn \l__zitie_box_coffin \l__zitie_box_height_dim \l__zitie_box_height_dim }
       { \coffin_resize:Nnn \l__zitie_box_coffin \l__zitie_box_width_dim \l__zitie_box_width_dim }
-      {
-        \coffin_scale:Nnn \l__zitie_box_coffin \l__zitie_x_scale_tl \l__zitie_y_scale_tl
-      }
+      { \coffin_scale:Nnn \l__zitie_box_coffin \l__zitie_x_scale_tl \l__zitie_y_scale_tl }
   }
 \cs_new:Npn \__zitie_resize_method_square_aux:
   {
@@ -511,13 +510,13 @@
     \color_stroke:n { zitieframecolor }
     \tl_if_empty:NF \l__zitie_dash_pattern_tl { \exp_args:No \draw_dash_pattern:nn { \l__zitie_dash_pattern_tl } { 0pt } }
     \exp_after:wN \draw_path_corner_arc:nn \l__zitie_frame_arc_tl
-    \__zitie_frame_type_c:n { \l_zitie_frame_type_tl } { 0 } { 0 } { \zitiewidth } { \zitieheight } { 1 } { 1 }
+    \zitie_frame_type_c:n { \l_zitie_frame_type_tl } { 0 } { 0 } { \zitiewidth } { \zitieheight } { 1 } { 1 }
     \draw_coffin_use:Nnn \l__zitie_box_coffin { l } { b }
     \draw_end:
   }
 \zitie_new_frame_construct:nn { 口 }
   {
-    \draw_path_rectangle:nn { #1 , #2 } { #3 , #4 }
+    \draw_path_rectangle_corners:nn { #1 , #2 } { #3 , #4 }
     \cs_if_eq:NNTF \__zitie_aux_color_fill: \c_empty_tl
       { \draw_path_use_clear:n { stroke } }
       { \draw_path_use_clear:n { stroke , fill } }
@@ -532,8 +531,8 @@
   }
 \zitie_new_frame_construct:nn { 田 }
   {
-    \__zitie_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
-    \__zitie_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
   }
 \zitie_new_frame_construct:nn { × }
   {
@@ -545,14 +544,14 @@
   }
 \zitie_new_frame_construct:nn { 咪 }
   {
-    \__zitie_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
-    \__zitie_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
-    \__zitie_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
   }
 \zitie_new_frame_construct:nn { 米 }
   {
-    \__zitie_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
-    \__zitie_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
   }
 
 \NewDocumentCommand \zitienewfont { s } { \IfBooleanTF {#1} { \zitie_new_font:nnn } { \zitie_new_font:n } }
@@ -610,13 +609,13 @@
   }
 \hook_new_pair:nn { zitie/zitieframe/before } { zitie/zitieframe/after }
 \hook_new:n { zitie/zitieframe/par }
-\NewDocumentEnvironment { zitieframe } { G{} !O{} +b }
+\NewDocumentEnvironment { zitieframe } { G{} O{} +b }
   {
     \group_begin:
-    \lineskip=0pt \parindent=0pt \parskip=0pt
+    \lineskip=0pt \parindent=0pt \parskip=0pt \raggedright
     \tl_if_empty:nF {#2} { \keys_set:nn { zitie } {#2} }
-    #1
     \hook_use:n { zitie/zitieframe/before }
+    #1
     \bool_if:NTF \l__zitie_savefontname_bool
       { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
       { \tl_gset_eq:NN \zitiefontname \c_empty_tl }
@@ -688,7 +687,9 @@
        } ,
     typeset / none .code:n = { \cs_gset:Npn \__zitie_background_typeset: { } } ,
     true .meta:n = { typeset = true } ,
+    on .meta:n = { typeset = true } ,
     false .meta:n = { typeset = false } ,
+    off .meta:n = { typeset = false } ,
     next .meta:n = { typeset = next } ,
     none .meta:n = { typeset = none } ,
     lmargin .dim_gset:N = \g__zitie_background_lmargin_dim ,
@@ -749,23 +750,23 @@
       } ,
     frametype .tl_gset:N = \g__zitie_background_frametype_tl ,
     linewidth .dim_gset:N = \g__zitie_background_linewidth_dim ,
-    framecolor .code:n = { \zitie_color_set:nn { zitiebackgroundframecolor } {#1} } ,
-    framecolor* .code:n = { \zitie_color_set:nnn { zitiebackgroundframecolor } #1 } ,
+    framecolor .code:n = { \zitie_color_select:nn { zitiebackgroundframecolor } {#1} } ,
+    framecolor* .code:n = { \zitie_color_select:nnn { zitiebackgroundframecolor } #1 } ,
     fillcolor .code:n = 
       { 
         \exp_args:Nx \tl_if_empty:nTF {#1}
           { 
-            \zitie_color_set:nn { zitiebackgroundfillcolor } { white } 
+            \zitie_color_select:nn { zitiebackgroundfillcolor } { white } 
             \cs_gset_nopar:Npn \__zitie_background_aux_color_fill: { } 
           }
           { 
-            \zitie_color_set:nn { zitiebackgroundfillcolor } {#1}
+            \zitie_color_select:nn { zitiebackgroundfillcolor } {#1}
             \cs_gset_nopar:Npn \__zitie_background_aux_color_fill: { \color_fill:n {#1} } 
           }
       } ,
     fillcolor* .code:n = 
       { 
-        \zitie_color_set:nnn { zitiebackgroundfillcolor } #1
+        \zitie_color_select:nnn { zitiebackgroundfillcolor } #1
         \cs_gset_nopar:Npn \__zitie_background_aux_color_fill: { \color_fill:nn #1 } 
       } ,
     dashpattern .tl_gset:N = \g__zitie_background_dash_pattern_tl ,
@@ -838,8 +839,8 @@
   { \hook_gremove_code:nn { shipout/#1 } { zitie/background } }
 \cs_new:Npn \__zitie_unset_background_frame:nn #1#2
   { \hook_gremove_code:nn { shipout/#1 } { zitie/background/#2 } }
-\cs_new:Npn \__zitie_background_frame_type:n #1 { __zitie_background_frame_ #1 :nnnnnn }
-\cs_new:Npn \__zitie_background_frame_type_c:n #1 { \use:c { __zitie_background_frame_ #1 :nnnnnn } }
+\cs_new:Npn \zitie_background_frame_type:n #1 { __zitie_background_frame_ #1 :nnnnnn }
+\cs_new:Npn \zitie_background_frame_type_c:n #1 { \use:c { __zitie_background_frame_ #1 :nnnnnn } }
 \cs_new:Npn \__zitie_background_construct_draw:
   {
     \draw_begin:
@@ -848,7 +849,7 @@
     \draw_linewidth:n { \g__zitie_background_linewidth_dim }
     \__zitie_background_aux_color_fill:
     \color_stroke:n { zitiebackgroundframecolor }
-    \__zitie_background_frame_type_c:n { \g__zitie_background_frametype_tl }
+    \zitie_background_frame_type_c:n { \g__zitie_background_frametype_tl }
       { 0cm } { 0cm } 
       { \g__zitie_background_x_right_dim - \g__zitie_background_x_left_dim }
       { \g__zitie_background_y_bottom_dim - \g__zitie_background_y_top_dim }
@@ -857,7 +858,7 @@
     \draw_end:
   }
 \cs_new:Npn \zitie_background_new_frame_construct:nn #1
-  { \cs_set:cn { \__zitie_background_frame_type:n {#1} } }
+  { \cs_set:cn { \zitie_background_frame_type:n {#1} } }
 \int_new:N \l__zitie_background_tmpa_int
 \int_new:N \l__zitie_background_tmpb_int
 \fp_new:N \l__zitie_background_tmpa_fp
@@ -867,19 +868,11 @@
   {
     \cs_if_eq:NNF \__zitie_background_aux_color_fill: \c_empty_tl
       { 
-        \draw_path_rectangle:nn { #1 , #2 } { #3 , #4 }
+        \draw_path_rectangle_corners:nn { #1 , #2 } { #3 , #4 }
         \draw_path_use_clear:n { stroke , fill } 
       }
-    \dim_step_inline:nnnn {#1} {#5} {#3+\g__zitie_background_linewidth_dim}
-      {
-        \draw_path_moveto:n { ##1 , #2 }
-        \draw_path_lineto:n { ##1 , #4 }
-      }
-    \dim_step_inline:nnnn {#2} {#6} {#4+\g__zitie_background_linewidth_dim}
-      {
-        \draw_path_moveto:n { #1 , ##1 }
-        \draw_path_lineto:n { #3 , ##1 }
-      }
+    \draw_path_grid:nnnn { #5 } { #6 } { #1 , #2 } 
+      { #3+\g__zitie_background_linewidth_dim, #4+\g__zitie_background_linewidth_dim }
     \draw_path_use_clear:n { stroke }
   }
 \zitie_background_new_frame_construct:nn { 十 }
@@ -898,8 +891,8 @@
   }
 \zitie_background_new_frame_construct:nn { 田 }
   {
-    \__zitie_background_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
-    \__zitie_background_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_background_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_background_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
   }
 \zitie_background_new_frame_construct:nn { × }
   {
@@ -939,14 +932,14 @@
   }
 \zitie_background_new_frame_construct:nn { 米 }
   {
-    \__zitie_background_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
-    \__zitie_background_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_background_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_background_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
   }
 \zitie_background_new_frame_construct:nn { 咪 }
   {
-    \__zitie_background_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
-    \__zitie_background_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
-    \__zitie_background_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_background_frame_type_c:n { 口 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_background_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
+    \zitie_background_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
   }
 %%% end of background
 \else:
