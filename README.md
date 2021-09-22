@@ -32,7 +32,7 @@ Dependence: `LaTeX2e 2020-10-01` and after, `l3draw`, please note that `l3draw` 
 依赖 `l3draw`，不依赖 `pgf` 模块。注意：`l3draw` 目前仍然是实验性的，往后版本可能无法使用。
 
 TODO:
-- documentation 编写说明文档
+- ~~documentation 编写说明文档~~
 - faster and less resource 实现更快、消耗资源更少的版本
 - optimize `background` module 改进 background 模块
 - support LuaTeX 支持 LuaTeX
