@@ -41,3 +41,5 @@ TODO:
 - more transform 支持更多的变换
 - support opacity (need l3opacity)
 - ...
+
+Source file (zitie.tex, zitie.sty) under LPPL 1.3c license.
