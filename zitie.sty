@@ -2,7 +2,7 @@
 \NeedsTeXFormat{LaTeX2e}[2020/10/01]
 \RequirePackage{ xparse , l3keys2e }
 \RequirePackage{ l3draw }
-\ProvidesExplPackage {zitie} {2021/09/21} {v1.0} {CJK character calligraphy sheet}
+\ProvidesExplPackage {zitie} {2021/09/23} {v1.1} {CJK character calligraphy sheet}
 \RequirePackage { xeCJK }
 \@ifpackageloaded { ctex } { } 
   { \RequirePackage { ctexsize } \sys_if_platform_windows:T { \setCJKmainfont {SimSun} } }
@@ -58,6 +58,10 @@
 
 \tl_const:Nn \c_zitie_font_name_prefix_tl { 字帖@ }
 
+%%% fontspec, xeCJK, xetex
+\cs_new:Npn \zitie_stroke_chars:nn #1#2 % operator, chars
+  { \special { pdf:code ~ q ~ #1 } #2 \special { pdf:code ~ Q } }
+\cs_new:Npn \zitiestrokechars { \zitie_stroke_chars:nn }
 \prg_set_eq_conditional:NNn \zitie_font_if_exist:n \fontspec_font_if_exist:n { T, F, TF }
 \cs_new_nopar:Npn \__zitie_zihao:n #1 { \zihao {#1} }
 \cs_set_eq:NN \__zitie_check_num_range:nnNN \__xeCJK_check_num_range:nnNN
@@ -118,7 +122,7 @@
   { \exp_args:Nf \zitie_token_if_punctuation:NT }
 \cs_set:Npn \zitie_token_if_punctuation_f:NF
   { \exp_args:Nf \zitie_token_if_punctuation:NF }
-
+%%%
 
 \prg_new_conditional:Npnn \zitie_if_preamble: { p, T, F, TF }
   {
@@ -135,10 +139,10 @@
   }
 \cs_new_nopar:Npn \zitie_frame_type:n #1 { __zitie_frame_construct_type_ #1 :nnnnnn } % x1, y1, x2, y2, x times, y times
 \cs_new_nopar:Npn \zitie_frame_type_c:n #1 { \use:c { __zitie_frame_construct_type_ #1 :nnnnnn } }
-\cs_new_nopar:Npn \__zitie_resize:n #1 { __zitie_processor_resize_ #1 :w }
-\cs_new_nopar:Npn \__zitie_resize_c:n #1 { \use:c { __zitie_processor_resize_ #1 :w } }
-\cs_new_nopar:Npn \zitie_processor:n #1 { __zitie_processor_ #1 :w }
-\cs_new_nopar:Npn \zitie_processor_c:n #1 { \use:c { __zitie_processor_ #1 :w } }
+\cs_new_nopar:Npn \__zitie_resize:n #1 { __zitie_processor_resize_ #1 :n }
+\cs_new_nopar:Npn \__zitie_resize_c:n #1 { \use:c { __zitie_processor_resize_ #1 :n } }
+\cs_new_nopar:Npn \zitie_processor:n #1 { __zitie_processor_ #1 :n }
+\cs_new_nopar:Npn \zitie_processor_c:n #1 { \use:c { __zitie_processor_ #1 :n } }
 \cs_new_nopar:Npn \zitie_processor:nnn #1#2#3
   {
     __zitie_processor_ #1 @ #2 :
@@ -266,6 +270,15 @@
         \keys_set:nn { zitie } { filepath+ = {#1} }
       } ,
     filepath+ .code:n = { \tl_map_inline:nn {#1} { \seq_put_right:Nn \l_file_search_path_seq {##1} } } ,
+    charstroke .multichoice: ,
+    charstroke / none .code:n = { \cs_set_eq:cN { \zitie_processor:n { charstroke } } \use:n } ,
+    charstroke / unknown .code:n = { \cs_set_eq:cc { \zitie_processor:n { charstroke } } {#1} } ,
+    charstrokespecial .code:n = 
+      { 
+        \cs_set:cn { \zitie_processor:n { charstroke } } 
+          { \zitie_stroke_chars:nn {#1} {##1} }
+      } ,
+    charstroke .initial:n = { none } ,
 
     debug .bool_set:N = \l__zitie_debug_bool ,
     debug .initial:n = false ,
@@ -296,7 +309,8 @@
     \keys_define:nn { zitie } 
       { #1/#2 .code:n = { \cs_set_eq:cc { \zitie_processor:n {#1} } { \zitie_processor:nnn {#1} {#2} {#3} } } }
   }
-\NewDocumentCommand \zitienewrule { O{1} >{\TrimSpaces} m m m } { \zitie_new_process_rule:nnnn {#2} {#3} {#1} {#4} }
+\NewDocumentCommand \zitienewrule { O{1} >{\TrimSpaces} m > {\TrimSpaces} m m } 
+  { \zitie_new_process_rule:nnnn {#2} {#3} {#1} {#4} }
 \zitie_new_process_rule:nnn { punctuation } { onlast }
   { \tex_penalty:D 10000\smash{ \makebox[0pt]{ \color_select:n { zitiecharcolor } \zitieCJKfamily{\zitiefontname} #1 } } }
 \zitie_new_process_rule:nnn { punctuation } { scale }
@@ -304,6 +318,15 @@
     \hbox_set:Nn \l_tmpa_box { \color_select:n { zitiecharcolor } \zitieCJKfamily{\zitiefontname} #1 }
     \box_scale:Nnn \l_tmpa_box \zitiexscaleratio \zitieyscaleratio \box_use_drop:N \l_tmpa_box 
   }
+\zitie_new_process_rule:nnn { charstroke } { solid }
+  { \zitie_stroke_chars:nn { 1 ~ Tr ~ 0.25 ~ w ~ [] ~ 0 ~ d ~ 1 ~ J } {#1} }
+\zitie_new_process_rule:nnn { charstroke } { dashed }
+  { \zitie_stroke_chars:nn { 1 ~ Tr ~ 0.25 ~ w ~ [.8] ~ 0 ~ d ~ 1 ~ J } {#1} }
+\zitie_new_process_rule:nnn { charstroke } { whitesolid }
+  { \zitie_stroke_chars:nn { 2 ~ Tr ~ 0.25 ~ w ~ [] ~ 0 ~ d ~ 1 ~ J ~ 1 ~ 1 ~ 1 ~ rg } {#1} }
+\zitie_new_process_rule:nnn { charstroke } { whitedashed }
+  { \zitie_stroke_chars:nn { 2 ~ Tr ~ 0.25 ~ w ~ [.8] ~ 0 ~ d ~ 1 ~ J ~ 1 ~ 1 ~ 1 ~ rg } {#1} }
+
 
 \cs_new:Npn \__zitie_new_font_family:nn #1#2 { \__zitie_new_font_family:nnn {#1} {#2} { } }
 \cs_new:Npn \__zitie_new_font_family_validate:nn #1#2 { \__zitie_new_font_family_validate:nnn {#1} {#2} { } }
@@ -383,9 +406,10 @@
       { \zitie_processor_c:n { punctuation } {#1} }
       {
         \hcoffin_set:Nn \l__zitie_box_coffin 
-          { 
-            \color_select:n { zitiecharcolor } 
-            \zitie_cjk_glyph_use:nN { \l__zitie_font_tl } \l__zitie_curr_char_tl 
+          {
+            \color_select:n { zitiecharcolor }
+            \zitie_processor_c:n { charstroke }
+              { \zitie_cjk_glyph_use:nN { \l__zitie_font_tl } \l__zitie_curr_char_tl }
           }
         \tl_set:Nx \zitiexscaleratio { \dim_to_decimal:n { \coffin_wd:N \l__zitie_box_coffin} }
         \tl_set:Nx \zitieyscaleratio { \dim_to_decimal:n { \__zitie_coffin_ht_plus_dp:N \l__zitie_box_coffin } }
