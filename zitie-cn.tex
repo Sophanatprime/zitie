@@ -83,6 +83,8 @@
   colboxes=20,rowboxes=30,
 ]
 
+\changes{v1.2}{2021/09/23}{修改了一些文档错误，将 \cs{zitie_color_select:..} 修改为 \cs{zitie_color_set:..}}
+
 \pkg{zitie} 宏包是用纯 \LaTeX3 模块编写的（即，不加载 \pkg{pgf}、\pkg{pstricks} 等绘图宏包），也不使用 \pkg{xcolor} 宏包，来生成网格化的字、生成网格化的背景的宏包。绘图功能完全依赖 \pkg{l3draw}，但应注意 \pkg{l3draw} 目前仍然是实验性的，其接口在后续版本可能无法使用。
 
 \LaTeXe 版本应在 2020-10-01 及以后。
@@ -407,7 +409,7 @@
   \begin{syntax}
     filepath = \{ <filepath1>, <filepath2>, ... \}
   \end{syntax}
-  \opt{filepath} 为 \cs{framefile}\verb|*| 添加文件搜索路径。其值为逗号分隔的列表。
+  \opt{filepath} 为 \cs{framezifile}\verb|*| 添加文件搜索路径。其值为逗号分隔的列表。
   \opt{filepath+} 将新的搜索路径局部地添加到原有的路径上。
 \end{function}
 
@@ -484,7 +486,7 @@
   zitiecharcolor,
   zitiefillcolor,
 }
-  这些是全局保存的颜色名，可在 \pkg{xcolor} 宏包的 \tn{color} 命令 和 \LaTeX3 命令 \cs{color_select:n} 及 \cs{zitie_color_select:n} 中使用。
+  这些是全局保存的颜色名，可在 \pkg{xcolor} 宏包的 \tn{color} 命令 和 \LaTeX3 命令 \cs{color_select:n} 中使用。
 \end{function}
 
 
@@ -610,10 +612,10 @@
 \end{function}
 
 \begin{function}{
-  \zitie_color_select:nn,
-  \zitie_color_select:nnn,
+  \zitie_color_set:nn,
+  \zitie_color_set:nnn,
 }
-  颜色选择。
+  颜色设置。
 \end{function}
 
 \begin{function}{

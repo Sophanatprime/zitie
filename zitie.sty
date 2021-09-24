@@ -6,20 +6,20 @@
 \RequirePackage { xeCJK }
 \@ifpackageloaded { xcolor }
   { 
-    \cs_set_nopar:Npn \zitie_color_select:nn #1#2 { \colorlet{#1}{#2} \color_set:nn {#1} {#2} } 
-    \cs_set_nopar:Npn \zitie_color_select:nnn #1#2#3 { \colorlet{#1}[#2]{#3} \color_set:nnn {#1} {#2} {#3} }
+    \cs_set_nopar:Npn \zitie_color_set:nn #1#2 { \colorlet{#1}{#2} \color_set:nn {#1} {#2} } 
+    \cs_set_nopar:Npn \zitie_color_set:nnn #1#2#3 { \colorlet{#1}[#2]{#3} \color_set:nnn {#1} {#2} {#3} }
   }
   { 
     \hook_gput_code:nnn { package/after/xcolor } { package } 
       { 
-        \cs_set_nopar:Npn \zitie_color_select:nn #1#2 { \colorlet{#1}{#2} \color_set:nn {#1} {#2} } 
-        \cs_set_nopar:Npn \zitie_color_select:nnn #1#2#3 { \colorlet{#1}[#2]{#3} \color_set:nnn {#1} {#2} {#3} }
+        \cs_set_nopar:Npn \zitie_color_set:nn #1#2 { \colorlet{#1}{#2} \color_set:nn {#1} {#2} } 
+        \cs_set_nopar:Npn \zitie_color_set:nnn #1#2#3 { \colorlet{#1}[#2]{#3} \color_set:nnn {#1} {#2} {#3} }
       } 
-    \cs_set_nopar:Npn \zitie_color_select:nn #1#2 { \color_set:nn {#1} {#2} }
-    \cs_set_nopar:Npn \zitie_color_select:nnn #1#2#3 { \color_set:nnn {#1} {#2} {#3} }
+    \cs_set_nopar:Npn \zitie_color_set:nn #1#2 { \color_set:nn {#1} {#2} }
+    \cs_set_nopar:Npn \zitie_color_set:nnn #1#2#3 { \color_set:nnn {#1} {#2} {#3} }
   }
 \NewDocumentCommand \zitiecolorlet { m o m }
-  { \IfNoValueTF {#2} { \zitie_color_select:nn {#1} {#3} } { \zitie_color_select:nnn {#1} {#2} {#3} } }
+  { \IfNoValueTF {#2} { \zitie_color_set:nn {#1} {#3} } { \zitie_color_set:nnn {#1} {#2} {#3} } }
 
 \tl_new:N \zitiebasechar
 \tl_new:N \l__zitie_basechar_fontsize_tl
@@ -245,26 +245,26 @@
     holdbasechar .meta:n = { holdbasecharwidth = #1 , holdbasecharheight = #1  } ,
     holdbasechar .initial:n = false ,
     holdbasechar .default:n = true ,
-    framecolor .code:n = { \zitie_color_select:nn { zitieframecolor } {#1} } ,
+    framecolor .code:n = { \zitie_color_set:nn { zitieframecolor } {#1} } ,
     framecolor .initial:n = black ,
-    framecolor* .code:n = { \zitie_color_select:nnn { zitieframecolor } #1 } ,
-    charcolor .code:n = { \zitie_color_select:nn { zitiecharcolor } {#1} } ,
+    framecolor* .code:n = { \zitie_color_set:nnn { zitieframecolor } #1 } ,
+    charcolor .code:n = { \zitie_color_set:nn { zitiecharcolor } {#1} } ,
     charcolor .initial:n = black ,
-    charcolor* .code:n = { \zitie_color_select:nnn { zitieframecolor } {#1} } ,
+    charcolor* .code:n = { \zitie_color_set:nnn { zitieframecolor } {#1} } ,
     color .meta:n = { framecolor = #1, charcolor = #1 } ,
     color* .meta:n = { framecolor* = #1, charcolor* = #1 } ,
     fillcolor .code:n = 
       { 
         \exp_args:Nx \tl_if_empty:nTF {#1}
-          { \zitie_color_select:nn { zitiefillcolor } { white } \cs_set_nopar:Npn \__zitie_aux_color_fill: { } }
+          { \zitie_color_set:nn { zitiefillcolor } { white } \cs_set_nopar:Npn \__zitie_aux_color_fill: { } }
           { 
-            \zitie_color_select:nn { zitiefillcolor } {#1}
+            \zitie_color_set:nn { zitiefillcolor } {#1}
             \cs_set_nopar:Npn \__zitie_aux_color_fill: { \color_fill:n {#1} } 
           }
       } ,
     fillcolor* .code:n = 
       { 
-        \zitie_color_select:nnn { zitiefillcolor } #1
+        \zitie_color_set:nnn { zitiefillcolor } #1
         \cs_set_nopar:Npn \__zitie_aux_color_fill: { \color_fill:nn #1 } 
       } ,
     dashpattern .tl_set:N = \l__zitie_dash_pattern_tl ,
@@ -794,23 +794,23 @@
       } ,
     frametype .tl_gset:N = \g__zitie_background_frametype_tl ,
     linewidth .dim_gset:N = \g__zitie_background_linewidth_dim ,
-    framecolor .code:n = { \zitie_color_select:nn { zitiebackgroundframecolor } {#1} } ,
-    framecolor* .code:n = { \zitie_color_select:nnn { zitiebackgroundframecolor } #1 } ,
+    framecolor .code:n = { \zitie_color_set:nn { zitiebackgroundframecolor } {#1} } ,
+    framecolor* .code:n = { \zitie_color_set:nnn { zitiebackgroundframecolor } #1 } ,
     fillcolor .code:n = 
       { 
         \exp_args:Nx \tl_if_empty:nTF {#1}
           { 
-            \zitie_color_select:nn { zitiebackgroundfillcolor } { white } 
+            \zitie_color_set:nn { zitiebackgroundfillcolor } { white } 
             \cs_gset_nopar:Npn \__zitie_background_aux_color_fill: { } 
           }
           { 
-            \zitie_color_select:nn { zitiebackgroundfillcolor } {#1}
+            \zitie_color_set:nn { zitiebackgroundfillcolor } {#1}
             \cs_gset_nopar:Npn \__zitie_background_aux_color_fill: { \color_fill:n {#1} } 
           }
       } ,
     fillcolor* .code:n = 
       { 
-        \zitie_color_select:nnn { zitiebackgroundfillcolor } #1
+        \zitie_color_set:nnn { zitiebackgroundfillcolor } #1
         \cs_gset_nopar:Npn \__zitie_background_aux_color_fill: { \color_fill:nn #1 } 
       } ,
     dashpattern .tl_gset:N = \g__zitie_background_dash_pattern_tl ,
