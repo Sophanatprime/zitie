@@ -3,6 +3,9 @@
 \usepackage[enable-zhlipsum,enable-background]{zitie}
 \usepackage{geometry}
 
+\def\zitieversion{1.2}
+\def\zitiedate{农历二〇二一年八月十八}
+
 \NewDocumentCommand{\init}{+v}{\hspace{\fill}初始值~=~\textcolor{blue}{\bfseries#1}}
 
 \IfFontExistsTF{KaiTi}{\zitienewfont{{楷体}{KaiTi}}}{}
@@ -13,14 +16,16 @@
   framecolor=green!60!black,charcolor=red!65!black,
   resize=square,frametype=咪,font,savefontname,
 }
-\def\zitieversion{1.1}
 \title{\texorpdfstring{\framezi[width=3\ccwd,fillcolor=black,charcolor=red!75!black,font=文征明行草简繁]{字帖}\framezi[width=2\ccwd,font=楷体]{宏包}}{zitie宏包}}
-\date{\texorpdfstring{\framezi[width=2\ccwd,font=文征明行草简繁]{农历二〇二一年八月十五}}{农历二〇二一年八月十五} v\zitieversion}
-\author{陈文建（Longaster）}
+\date{\texorpdfstring{\framezi*[width=2\ccwd,font=文征明行草简繁]{\zitiedate}}{\zitiedate} v\zitieversion}
+\author{陈文建\texttt{longaster@163.com}}
 
 \begin{document}
 
 \newgeometry{textheight=27cm,textwidth=17cm,bottom=1.7cm}
+
+\zitiesetup{holdbasecharheight=true}
+
 \maketitle
 \thispagestyle{empty}
 
@@ -66,6 +71,7 @@
 }\hfill ——《少年歌行》
 
 {\heiti\small 注：本文档中的非商业的字体版权为原字体公司（北京方正有限公司及其它相关公司），此处使用该字体仅为显示该宏包的排版效果，不作商业用途。本文档\pkg{zitie.tex}和相应的\pkg{zitie.sty}源文件使用 \href{https://www.latex-project.org/lppl/lppl-1-3c/}{LPPL 1.3c 协议。}}
+\zitiesetup{holdbasecharheight=false}
 
 \clearpage
 \restoregeometry
@@ -77,7 +83,7 @@
   colboxes=20,rowboxes=30,
 ]
 
-\pkg{zitie} 宏包是用纯 \LaTeX3 模块编写的（即，不加载 \pkg{pgf}、\pkg{pstricks} 等绘图宏包），来生成网格化的字、生成网格化的背景的宏包。绘图功能完全依赖 \pkg{l3draw}，但应注意 \pkg{l3draw} 目前仍然是实验性的，其接口在后续版本可能无法使用。
+\pkg{zitie} 宏包是用纯 \LaTeX3 模块编写的（即，不加载 \pkg{pgf}、\pkg{pstricks} 等绘图宏包），也不使用 \pkg{xcolor} 宏包，来生成网格化的字、生成网格化的背景的宏包。绘图功能完全依赖 \pkg{l3draw}，但应注意 \pkg{l3draw} 目前仍然是实验性的，其接口在后续版本可能无法使用。
 
 \LaTeXe 版本应在 2020-10-01 及以后。
 
@@ -87,21 +93,21 @@
 
 \section{\pkg{zitie} 宏包的加载和基本命令}\label{sec:basics}
 
-加载宏包：\tn{usepackage}\oarg{key-val}\verb|{zitie}|。\meta{key-val} 选项见以下几节。
+加载宏包：\tn{usepackage}\oarg{key-val}\verb|{zitie}|。\meta{key-val} 选项见第 \ref{sec:options} 节。
 
-若要加载 \pkg{ctex} 宏包，请先加载 \pkg{ctex} 然后再加载 \pkg{zitie} 宏包。若加载本宏包时未加载 \pkg{ctex} 宏包，
-则会加载 \pkg{xeCJK} 宏包和 \pkg{ctexsize} 宏包。如果是Windows平台，还将设置宋体为主字体。
+\changes{v1.2}{2021/09/23}{不再加载 \opt{ctexsize} 宏包。不再设置宋体为主字体}
+本宏包将加载 \pkg{xeCJK} 宏包\cite{pkg-xeCJK}。
 
 \begin{function}{\zitienewfont,\zitieCJKfamily}
   \begin{syntax}
     \cs{zitienewfont} \{ \marg{font family} \marg{font name} , ... \}
-    \cs{zitienewfont} \{ \marg{font family} \marg{font name} \marg{features} , ... \}
-    \cs{zitienewfont} * \marg{font family} \marg{font name} \marg{font feature}
+    \cs{zitienewfont} \{ \marg{font family} \marg{font name} \marg{font features} , ... \}
+    \cs{zitienewfont} * \marg{font family} \marg{font name} \marg{font features}
     \cs{zitieCJKfamily} \marg{font family}
     \cs{zitieCJKfamily}+ \marg{font family}
     \cs{zitieCJKfamily}- \marg{font family}
   \end{syntax}
-  这个命令用来加载和设置需要的字体，\meta{font family} 为在 \cs{framezi} 等命令的 \opt{font} 选项中使用的名字，也可通过 \cs{zitieCJKfamily} 来在文档中使用该字体。\meta{font name} 为字体的名字，\meta{features}，为 \pkg{fontspec} 宏包和 \pkg{xeCJK} 宏包支持的字体特性。
+  这个命令用来加载和设置需要的字体，\meta{font family} 为在 \cs{framezi} 等命令的 \opt{font} 选项中使用的名字，也可通过 \cs{zitieCJKfamily} 来在文档中使用该字体。\meta{font name} 为字体的名字，\meta{features}，为 \pkg{fontspec} 宏包\cite{pkg-fontspec} 和 \pkg{xeCJK} 宏包支持的字体特性。
 
   \cs{zitieCJKfamily} 和 \pkg{xeCJK} 宏包的 \cs{CJKfamily} 作用完全相同，只不过首先判断该 \meta{font family} 是否被 \cs{zitienewfont} 声明，若没有，则再使用 \cs{CJKfamily} 进行处理。
 \end{function}
@@ -113,14 +119,16 @@
     \cs{framezifile} * \oarg{key-val} \marg{文件名}
   \end{syntax}
   以上命令用来生成网格化的字。
+  
+  \meta{key-val} 为第 \ref{sec:options} 节定义的键。
 
   \meta{字或词句} 应仅包含类代码为 11 或 12 的字符，即正常情况下输入的字符，不应包含 \TeX 控制序列即其它特殊字符。\cs{framezi} 带星号的版本接收一个控制序列，这个序列包含想要网格化的字。
 
-  \meta{逗号分隔的16进制序列} 应使用如下的形式：\verb|"4E00 -> "4E27, "4E30| 或 \verb|`一 -> `丢, `丰|，与其它设置字符序列的宏包相似（如 \pkg{xeCJK} 宏包的 \cs{xeCJKDeclareSubCJKBlock}）。注意，由于网格化操作需要大量的计算，因此单个 \meta{range} 不应太大，依据编译环境而定，一般不应超过 1000 个，否则可能无法成功编译。其它命令中也是如此。
+  \meta{逗号分隔的16进制序列} 应使用如下的形式：\verb|"4E00 -> "4E27, "4E30| 或 \verb|`一 -> `丢, `丰|，与其它设置字符序列的宏包相似（如 \pkg{xeCJK} 宏包的 \cs{xeCJKDeclareSubCJKBlock}）。注意，由于网格化操作需要大量的计算，因此单个 \meta{range} 不应太大，依据编译环境而定，一般不应超过 2000 个，否则可能无法成功编译。其它命令中也是如此。
 
   \meta{文件名} 为想要网格化的文字的文件名。\cs{framezifile} 带 \verb|*| 的版本，可在 \meta{key-val} 中使用 \opt{filepath} 设置文件搜索路径，详见后节的说明。带星号和不带星号的版本实现略有差异，速度也可能不一样。
 
-  当连续多次使用 \cs{framezi} 等命令时，为去掉后面的空白，可使用 \opt{\%}。
+  当连续多次使用 \cs{framezi} 等命令时，为去掉后面的空白，可使用 \opt{\%} 注释符。
 \end{function}
 
 \begin{function}{
@@ -131,7 +139,7 @@
 }
   这三个命令还各自定义了钩子（hook），其中带有 \verb|after| 为 \verb|reversed|，即先添加的后执行。\verb|before| 为选项设置完成后执行，\verb|after| 为整个命令执行完之后执行。其中 \verb|zitie/framerange/range| 为每一个列表均执行一次，包括无效的和最后一次。
 
-  可以通过 \cs{AddToHook}、\cs{AddToHookNext}、\cs{RemoveFromHook} 来添加和执行，详细请参考 \pkg{source2e.pdf} 或 \pkg{lthooks} 的说明文档。
+  可以通过 \cs{AddToHook}、\cs{AddToHookNext}、\cs{RemoveFromHook} 来添加和移除，详细请参考 \pkg{source2e.pdf}\cite{pdf-source2e} 或 \pkg{lthooks}\cite{pkg-lthooks} 的说明文档。
 \end{function}
 
 \begin{function}{zitieframe,
@@ -157,14 +165,20 @@
 
 以下选项在方框化命令的宏中是局部设置的。
 
-\begin{function}{basechar,zihao}
+\changes{v1.2}{2021/09/23}{新增 \opt{fontsize} 选项，不再使用 \opt{zihao} 选项作为默认字号选项。}
+\begin{function}{basechar,fontsize,zihao}
   \begin{syntax}
     basechar = \meta{CJK char} \init{好}
-    zihao = \meta{字号} \init{4}
+    fontsize = \meta{fontsize command} \init{\normalsize}
+    zihao = \meta{字号}
   \end{syntax}
-  \opt{basechar} 设置当 \opt{resize} 为 \opt{base} 类时的基字符，这个用来计算缩放比例，基字符不同时，即使给定相同的缩放比例，其实际缩放比例也可能不同。
+  \opt{basechar} 设置当 \opt{resize} 为 \opt{base} 类时的基字符，这个用来计算缩放比例，基字符不同时，即使给定相同的缩放比例，其实际缩放比例也可能不同。可使用后文介绍的 \cs{zitiebasechar} 来引用当前的 \opt{basechar} 值。
 
-  \opt{zihao} 设置计算缩放比例时的字号大小。
+  \opt{fontsize} 设置计算基字符时的字大小，默认值也为 \tn{normalsize}。\opt{zihao} 设置计算缩放比例时的字号大小，必须加载 \pkg{ctexsize} 或 \pkg{ctex} 宏包才可使用。
+
+  \opt{basechar} 和 \opt{fontsize} 应使用 \cs{zitiesetup} 或宏包选项全局地设置，在 \cs{framezi} 中使用该选项，则该修改在之后的 \cs{framezi} 中并不会生效，即设置是局部的。
+
+  当修改字体大小时，若要在 \cs{framezi} 等命令的外部使用其宽高寄存器（\tn{zitiebasecharwidth}、\tn{zitiebasecharheight}），则应重新设置 \opt{basechar} 或 \opt{fontsize}。\cs{framezi} 等命令将自动重新计算，但不会改变全局的值。
 \end{function}
 
 \begin{function}{punctuation, punctuation*}
@@ -192,6 +206,24 @@
 \end{function}
 \begin{texnote}
   按照 \pkg{xeCJK} 宏包的字符分类，\pkg{zitie} 宏包将字符类别为 \verb|FullLeft|、\verb|FullRight|、\verb|HalfLeft|、\verb|HalfRight| 视为标点符号。将 \verb|CJK|视为CJK字符。
+
+于是可以通过修改标点符号的字符类别为 \opt{CJK} 来使用CJK的处理规则，但是要注意，一般标点符号的宽高与常用字符的宽高并不一致。某些字符也不是全高的，这时，可用后文介绍的 \opt{holdbasecharheight} 键来保证至少有 \opt{basechar} 字符的高度。
+\begin{verbatim}
+  \xeCJKDeclareCharClass{CJK}{`。}
+  \framezi[resize=real,punctuation=leave,holdbasecharheight=false]{好的。一点、}
+  \framezi[resize=real,punctuation=leave,holdbasecharheight]{好的。一点、}
+  \xeCJKResetPunctClass
+  \framezi[resize=real,punctuation=leave,holdbasecharheight=false]{好的。一点、}
+  \framezi[resize=real,punctuation=leave,holdbasecharheight]{好的。一点、}
+\end{verbatim}
+
+\xeCJKDeclareCharClass{CJK}{`。}
+\framezi[width=1cm,resize=real,punctuation=leave,holdbasecharheight=false]{好的。一点、}
+\framezi[width=1cm,resize=real,punctuation=leave,holdbasecharheight]{好的。一点、}
+\xeCJKResetPunctClass
+
+\framezi[width=1cm,resize=real,punctuation=leave,holdbasecharheight=false]{好的。一点、}
+\framezi[width=1cm,resize=real,punctuation=leave,holdbasecharheight]{好的。一点、}
 \end{texnote}
 
 \begin{function}{frametype,resize}
@@ -199,7 +231,7 @@
     frametype = <none|口|十|田|米|咪|...> \init{none}
     resize    = <none|real|base|square|...> \init{none}
   \end{syntax}
-  \opt{frametype} 设置方框样式。可用值的效果正如选项值：\verb|口|--仅方框，\verb|十|--仅中间的横线和竖线，\verb|田|--常见的田字格，\verb|米|--十字格再加上斜的两条线，\verb|咪|--常见的米字格。还可自定义方框，详见第 \ref{sec:interface} 节。
+  \opt{frametype} 设置方框样式。可用值的效果正如选项值：\verb|口|--仅方框，\verb|十|--仅中间的横线和竖线，\verb|田|--常见的田字格，\verb|米|--十字格再加上斜的两条线，\verb|咪|--常见的米字格。还可自定义方框，详见第 \ref{sec:interface} 节。以下 \opt{frametype} 分别为 \verb|none|，\verb|口|，\verb|十|，\verb|田|，\verb|米|，\verb|咪|。
 
   {\zitiesetup{font=楷体,width=1cm,resize=square,framecolor=black,linewidth=.7pt}
   \framezi[frametype=none]{无}
@@ -211,7 +243,8 @@
 
   \opt{resize} 设置缩放方式。\opt{real}，使用字符实际宽高缩放，\opt{base}，使用 \opt{basechar} 设置的字符的宽高缩放，\opt{square}，使得字符的宽高相等再进行缩放。还可自定义缩放方式，详见第 \ref{sec:interface} 节。
 
-  以下为宽度设置为 1cm 时的缩放情况。
+  以下为宽度设置为 1cm，\opt{resize} 分别为 \verb|none|，\verb|real|，\verb|base|，\verb|square|时的缩放情况。
+
   {\zitiesetup{font=楷体,width=1cm,frametype=咪,framecolor=black}
   \framezi[resize=none]{无}
   \framezi[resize=real]{实}
@@ -219,9 +252,11 @@
   \framezi[resize=square]{方}}
 \end{function}
 
+\changes{v1.2}{2021/09/23}{新增 \opt{holdbasecharwidth}、\opt{holdbasecharheight}、\opt{holdbasechar} 选项。}
 \begin{function}{
   xscale,yscale,scale,
-  width,height
+  width,height,
+  holdbasecharheight,holdbasecharwidth,holdbasechar
 }
   \begin{syntax}
     xscale = \meta{scale ratio} \init{1}
@@ -229,12 +264,17 @@
     scale  = \meta{scale ratio}
     width  = \meta{dim}
     height = \meta{dim}
+    holdbasecharheight = \TTF \init{false}
+    holdbasecharwidth  = \TTF \init{false}
+    holdbasechar       = \TTF
   \end{syntax}
   设置缩放比例和盒子宽高。
 
   宽高具有更高的优先级，即若比例和宽高都设置了，则使用宽高来计算。宽高为二者都为0cm视为未设置，二者有一大于0cm，视为设置了宽高。
 
   此处的宽高和最终的宽高可能略有差异，最终的宽高保存在 \tn{zitiewidth} 和 \tn{zitieheight} dim寄存器中。
+  
+  \opt{holdbasecharheight}设置为 \opt{true} 时，将保证单个盒子至少有 \opt{basechar} 的高度，\opt{holdbasecharwidth} 设置为 \opt{true} 时，将设置盒子宽度为 \opt{basechar} 的宽度。\opt{holdbasechar} 将同时设置二者的值。
 \end{function}
 
 \begin{function}{
@@ -245,19 +285,19 @@
 }
   \begin{syntax}
     linewidth   = \meta{dim} \init{0.4pt}
-    dashpattern = \{ \meta{ dim1, dim2, ... } \}
+    dashpattern = \{ \meta{dim1}, \meta{dim2}, ... \}
     framearc    = \meta{dim}
-    framearc*   = \{ \marg{dim1} \marg{dim2} \}
+    framearc*   = \marg{dim1} \marg{dim2}
   \end{syntax}
 \end{function}
 
 {\zitiesetup{width=2cm,framecolor=black,font=楷体}
 \verb|linewidth=1pt|：\framezi[linewidth=1pt]{好} \\
 \verb|dashpattern={1mm,2mm,3mm,4mm}|：\framezi[dashpattern={1.5mm,1mm,2mm,1.5mm}]{好} \\
-\verb|framearc=3mm,frametype=口|：\framezi[framearc=3mm,frametype=口]{好} \\
-\verb|framearc=3mm,frametype=咪|：\framezi[framearc=3mm,frametype=咪]{好} \\
-\verb|framearc*={3mm}{6mm},frametype=口|：\framezi[framearc*={3mm}{6mm},frametype=口]{好} \\
-\verb|framearc*={3mm}{6mm},frametype=咪|：\framezi[framearc*={3mm}{6mm},frametype=咪]{好}
+\verb|framearc=3mm,frametype=|\verb|口|：\framezi[framearc=3mm,frametype=口]{好} \\
+\verb|framearc=3mm,frametype=|\verb|咪|：\framezi[framearc=3mm,frametype=咪]{好} \\
+\verb|framearc*={3mm}{6mm},frametype=|\verb|口|：\framezi[framearc*={3mm}{6mm},frametype=口]{好} \\
+\verb|framearc*={3mm}{6mm},frametype=|\verb|咪|：\framezi[framearc*={3mm}{6mm},frametype=咪]{好}
 }
 
 \begin{function}{
@@ -276,18 +316,19 @@
     fillcolor   = \meta{color expr}
     fillcolor*  = \marg{model(s)} \marg{value(s)}
   \end{syntax}
-  命名的颜色仅支持 \LaTeX3 定义的 black, white, red, green, blue, cyan, magenta 和 yellow。颜色模型和表达式也应使用 \LaTeX3 支持的模型和表达式，详见 \pkg{interface3.pdf} 文档。
+  命名的颜色仅支持 \LaTeX3 定义的 black, white, red, green, blue, cyan, magenta 和 yellow。颜色模型和表达式也应使用 \LaTeX3 支持的模型和表达式，详见 \pkg{interface3.pdf}\cite{pdf-interface3} 文档。
 
   若要去掉 \opt{fillcolor}，应将其设置为空，即 \verb|fillcolor={}|，而不是将其设置为白色。
 \end{function}
 
+\changes{v1.2}{2021/09/23}{\opt{charstroke} 新增 \opt{invisible} 值。}
 \begin{function}{
   charstroke,
   charstrokespecial,
   \zitiestrokechars
 }
   \begin{syntax}
-    charstroke = <none|solid|dashed|whitesolid|whitedashed|...> \init{none}
+    charstroke = <none|solid|dashed|whitesolid|whitedashed|invisible|...> \init{none}
     charstrokespecial = \meta{pdf literal}
     \cs{zitiestrokechars} \marg{pdf literal} \marg{typeset material}
   \end{syntax}
@@ -296,19 +337,32 @@
 
   初始值 \opt{none} 什么也不做。\opt{solid} 设置外轮廓为 0.25bp 的实线，\opt{dashed} 设置外轮廓为 0.25bp 的虚线。这两个
   不会进行填充操作，即背景色是什么颜色，则字显示的就是背景，字轮廓的颜色为 \opt{charcolor} 的颜色。\opt{whitesolid} 和
-  \opt{whitedashed} 在 \opt{solid} 和 \opt{dashed} 的基础上将字填充为白色。
+  \opt{whitedashed} 在 \opt{solid} 和 \opt{dashed} 的基础上将字填充为白色。\opt{invisible} 将字符设置为不可见，但不影响背景和网格的显示，隐藏的字仍然可被复制。
 
   \opt{charstrokespecial} 将 \meta{pdf literal} 为用在 \tn{special}\verb|{pdf:code ...}| 中 pdf 的指令，
   其中，\verb|charstroke=solid| 相当于 \verb|charstrokespecial={1 Tr 0.25 w [] 0 d 1 J}|，
   \verb|charstroke=dashed| 相当于 \verb|charstrokespecial={1 Tr 0.25 w [0.8] 0 d 1 J}|，
   \verb|charstroke=whitesolid| 相当于 \verb|charstrokespecial={2 Tr 0.25 w [] 0 d 1 J 1 1 1 rg}|，
   \verb|charstroke=whitedashed| 相当于 \verb|charstrokespecial={2 Tr 0.25 w [0.8] 0 d 1 J 1 1 1 rg}|。
-
-  还可使用 \cs{zitienewrule} 来定义新的 \opt{charstroke} 处理规则。这个键的处理器接收当前的 \meta{CJK char} 作为其参数。
-  具体的定义见 \cs{zitienewrule} 的说明。
-
-  \cs{zitiestrokechars} 使用 \meta{pdf literal} 处理 \meta{typeset material}。
+  
+  \meta{pdf literal} 可用的算符参考 \pkg{pdf reference}\cite{pdfreference}。
 \end{function}
+  
+于是可将字符渲染模式设置为3来隐藏字：\\
+\verb|\framezi[charstroke=solid]{字}|：\framezi[width=1cm,charstroke=solid]{字}， \\
+\verb|\framezi[charstrokespecial={3 Tr}]{字}|：\framezi[width=1cm,charstrokespecial={3 Tr}]{字}。
+
+还可使用 \cs{zitienewrule} 来定义新的 \opt{charstroke} 处理规则。这个键的处理器接收当前的 \meta{CJK char} 作为其参数。
+具体的定义见 \cs{zitienewrule} 的说明。
+
+\cs{zitiestrokechars} 使用 \meta{pdf literal} 处理 \meta{typeset material}。
+  
+于是上述隐藏字的效果可用 \cs{zitienewrule} 和 \cs{zitiestrokechars} 来定义一个 \opt{invisible} 规则：
+\begin{verbatim}
+  \zitienewrule{charstroke}{invisible}{\zitiestrokechars{3 Tr}{#1}}
+  \framezi[width=1cm,charstroke=invisible]{字}
+\end{verbatim}
+  \framezi[width=1cm,charstroke=invisible]{字}。这与上面的效果是相同的。实际上，\pkg{zitie} 就是这样实现的。
 
 \begin{function}{
   font,savefontname,
@@ -325,36 +379,36 @@
   \end{syntax}
   \opt{font} 设置盒子中使用的字体，若将其设置为空，即 \verb|font={}| 或 \verb|font|，则将使用正文字体。
 
-  \opt{savefontname} 设置是否保存字体名字，以便在后文使用，如在标点符号的处理中。
+  \opt{savefontname} 设置是否保存字体名字，若设置为真，则将 \opt{font} 键指定的字体名字保存在 \tn{zitiefontname} 中，以便在后文使用，如在标点符号的处理中或页眉页脚中。
 
   \opt{fallbackfont} 设置当当前字体中不存在此字形时，要使用哪些字体，字体必须被 \cs{zitienewfont} 或 \cs{newCJKfontfamily} 声明。
-  \opt{fallbackfont+} 将 \marg{fallback font list} 添加的之前的 \meta{fallback font list} 中。
+  \opt{fallbackfont+} 将 \marg{fallback font list} 局部的添加到之前的 \meta{fallback font list} 中。
 
-  注意，\opt{fallbackfont} 特性和 \pkg{xeCJK} 的 \verb|FallBack| 并不冲突，当 \opt{fallback font list} 中的所有字体没有对应的字形时，才会使用 \verb|FallBack| 定义的字体。这一特性可通过 \verb|fallback=false| 来关闭。
+  注意，\opt{fallbackfont} 特性和 \pkg{xeCJK} 的 \verb|FallBack| 并不冲突，当 \opt{fallback font list} 中的所有字体没有对应的字形时，才会使用 \verb|FallBack| 定义的字体。这一特性可通过设置 \verb|fallback=false| 来关闭。
 \end{function}
 
 如在 \verb|FZSunGuoTingCaoShuFU|（方正孙过庭草书）字体中没有“丂丄”，
-虽然在在导言区使用 \verb|\zitienewfont{ {孙过庭草繁}{FZSunGuoTingCaoShuFU}{FallBack=SimSun} }| 设置其 \verb|FallBack| 字体为 \verb|SimSun|（宋体），但若设置 \verb|fallbackfont={楷体},fallback=true| 则会在楷体中查找是否有该字形，然后再在宋体中查找：
+虽然在在导言区使用 \verb|\zitienewfont{ {孙过庭草繁}{FZSunGuoTingCaoShuFU}{FallBack=SimSun} }| 设置其 \verb|FallBack| 字体为 \verb|SimSun|（宋体），但若设置 \verb|fallbackfont={楷体},fallback=true| 则会在楷体中查找是否有该字形，然后才在宋体中查找：
 
 \begin{verbatim}
-  \framezi[fallbackfont={楷体},width=1cm,font=孙过庭草繁,fallback]{一丁丂七丄}
+  \framezi[fallbackfont={楷体},width=1cm,font=孙过庭草繁,fallback,holdbasecharheight]{一丁丂七丄}
 \end{verbatim}
-\framezi[fallbackfont={楷体},width=1cm,font=孙过庭草繁,fallback,framecolor=black]{一丁丂七丄}
+\framezi[fallbackfont={楷体},width=1cm,font=孙过庭草繁,fallback,framecolor=black,holdbasecharheight]{一丁丂七丄}
 
 \begin{verbatim}
-  \framezi[width=1cm,font=孙过庭草繁,fallback]{一丁丂七丄}
+  \framezi[width=1cm,font=孙过庭草繁,fallback,holdbasecharheight]{一丁丂七丄}
 \end{verbatim}
-\framezi[width=1cm,font=孙过庭草繁,fallback,framecolor=black]{一丁丂七丄}
+\framezi[width=1cm,font=孙过庭草繁,fallback,framecolor=black,holdbasecharheight]{一丁丂七丄}
 
 \begin{function}{
   filepath,
   filepath+
 }
   \begin{syntax}
-    filepath = <filepath1, filepath2, ...>
+    filepath = \{ <filepath1>, <filepath2>, ... \}
   \end{syntax}
   \opt{filepath} 为 \cs{framefile}\verb|*| 添加文件搜索路径。其值为逗号分隔的列表。
-  \opt{filepath+} 将新的搜索路径添加到原有的路径上。
+  \opt{filepath+} 将新的搜索路径局部地添加到原有的路径上。
 \end{function}
 
 \begin{function}{
@@ -365,7 +419,7 @@
     \cs{zitiesetup} \marg{key-val}
     \cs{zitiecolorlet} \marg{name} \oarg{model} \marg{value}
   \end{syntax}
-  用于设置选项，定义新的颜色。注意，若加载 \pkg{xcolor} 不能使用 \tn{colorlet}命令，必须使用 \cs{zitiecolorlet} 来设置颜色。
+  \cs{zitiesetup} 为 \pkg{zitie} 宏包的设置命令，这个命令设置的值在当前组中有效。\cs{zitiecolorlet} 定义新的颜色。注意，若加载 \pkg{xcolor} 宏包，使用 \tn{colorlet} 命令定义的颜色无法在 \pkg{zitie} 宏包中使用，必须使用 \cs{zitiecolorlet} 来定义颜色。
 \end{function}
 
 \begin{function}{\zitienewrule}
@@ -377,7 +431,7 @@
   \meta{arg nums} 为键预先定义的参数数目。若未设置 \meta{arg nums}，则将其设置为1。
 \end{function}
 
-\pkg{zitie} 宏包使用了
+\pkg{zitie} 宏包使用
 \begin{verbatim}
   \zitienewrule{punctuation}{onlast}
     {\penalty10000 \smash{\makebox[0pt]{%
@@ -404,10 +458,15 @@
     { \zitiestrokechars { 2 Tr 0.25 w [] 0 d 1 J 1 1 1 rg } {#1} }
   \zitienewrule {charstroke} {whitedashed}
     { \zitiestrokechars { 2 Tr 0.25 w [0.8] 0 d 1 J 1 1 1 rg } {#1} }
+  \zitienewrule {charstroke} {invisible} { \zitiestrokechars{3 Tr} {#1} }
 \end{verbatim}
-定义了四个 \opt{charstroke} 处理规则，这样就可以使用 \verb|charstroke=solid, ...| 来处理字符。
+定义了五个 \opt{charstroke} 处理规则，这样就可以使用 \verb|charstroke=solid, ...| 来处理字符。
 
+\changes{v1.2}{2021/09/23}{新增 \cs{zitiebasechar}、\cs{zitiebasecharwidth}、\cs{zitiebasecharheight}}
 \begin{function}{
+  \zitiebasechar,
+  \zitiebasecharwidth,
+  \zitiebasecharheight,
   \zitiewidth,
   \zitieheight,
   \zitieboxwd,
@@ -417,7 +476,7 @@
   \zitiexscaleratio,
   \zitieyscaleratio,
 }
-  这些命令为全局设置的接口。
+  \cs{zitiebasechar}、\cs{zitiebasecharwidth}、\cs{zitiebasecharheight} 是局部设置的。其它的为全局设置的接口。
 \end{function}
 
 \begin{function}{
@@ -425,7 +484,7 @@
   zitiecharcolor,
   zitiefillcolor,
 }
-  这些是全局保存的颜色名，可在 \pkg{xcolor} 宏包的 \tn{color} 命令 和 \LaTeX3 命令 \cs{color_select:n} 中使用。
+  这些是全局保存的颜色名，可在 \pkg{xcolor} 宏包的 \tn{color} 命令 和 \LaTeX3 命令 \cs{color_select:n} 及 \cs{zitie_color_select:n} 中使用。
 \end{function}
 
 
@@ -503,9 +562,11 @@
   ]
 \end{verbatim}
 
+\pkg{background} 的键值也可通过 \cs{zitiesetup}\verb|{background=|\marg{background key-val}\verb|}| 来设置。
+
 \section{zhlipsum, 中文乱数假文}
 
-\pkg{zitie} 宏包完全兼容 \pkg{zhlipsum} 宏包。使用 \cs{newzhlipsum} 命令定义的假文也可使用。
+\pkg{zitie} 宏包完全兼容 \pkg{zhlipsum} 宏包\cite{pkg-zhlipsum}。使用 \cs{newzhlipsum} 命令定义的假文也可使用。
 
 在加载宏包时使用 \opt{enable-zhlipsum} 以启用该特性。
 
@@ -591,15 +652,49 @@
 
 \begin{itemize}
   \item 实现更快的、消耗资源更少的版本。
+  \item 实现非单字处理的版本。
   \item 支持 \LuaTeX。
   \item 优化背景模块。
   \item 增加间距功能。
   \item 更多网格效果。
+  \item 支持 debug 信息和拼音。
   \item 更多缩放和变换效果。
   \item 对字符类别进行更多的分类处理。
   \item 支持透明度，（需要 \pkg{l3opacity}）。
   \item 等。
 \end{itemize}
+
+
+\begin{thebibliography}{9}
+\bibitem{pkg-xeCJK}
+\href{http://www.ctex.org}{CTEX.ORG},
+\newblock \textit{\pkg{xeCJK} 宏包}
+\bibitem{pkg-fontspec}
+\textsc{WILL ROBERTSON},
+\newblock With contributions by Khaled Hosny, Philipp Gesang, Joseph Wright, and others.
+\newblock \textit{The fontspec package}
+\bibitem{pdf-source2e}
+\textsc{Johannes Braams,
+David Carlisle,
+Alan Jeffrey,
+Leslie Lamport,
+Frank Mittelbach,
+Chris Rowley,
+Rainer Schöpf},
+\newblock The {\LaTeXe} Sources,
+\bibitem{pkg-lthooks}
+\textsc{Frank Mittelbach},
+\newblock \textit{The lthooks package}
+\bibitem{pdf-interface3}
+\textsc{The {\LaTeX} Project},
+\newblock The {\LaTeX3} Interfaces
+\bibitem{pkg-zhlipsum}
+{\kaishu 曾祥东},
+\newblock zhlipsum: 中文乱数假文（Lorem ipsum）
+\bibitem{pdfreference}
+\textsc{Adobe® Systems Incorporated},
+\newblock \textit{Adobe® Portable Document Format}
+\end{thebibliography}
 
 \IndexLayout
 \zitiebackground[off]
