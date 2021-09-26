@@ -3,9 +3,6 @@
 zitie is a LaTeX package for making CJK character calligraphy practicing 
 sheet (copybook). 
 
-zitie distinguishes `CJK` Classes and `Punctutation` Classes (`FullLeft`, 
-`FullRight`, `HalfLeft`, `HalfRight`) and other Classes.
-
 ## Main Interfaces
 
 `\framezi*[<options>]{<CJK chars>}`, makes frame for every single <CJK chars>
@@ -40,7 +37,7 @@ See PDF documentation (in chinese) for more details.
 Please note the frame functions of this package currently do need many TeX 
 computation, so the compiling maybe very slow.
 
-Currently, only support XeTeX. 
+Support XeTeX and LuaTeX, but the function in LuaTeX is limited.
 
 ## Dependence: 
 
@@ -50,9 +47,10 @@ is very experimental, some interfaces maybe cannot use later.
 Need not `pgf` or `pstricks`.
 
 ## TODO:
-- faster and less resource
+- **faster and less resource**
+- **optimize line breaking algorithm**
 - optimize `background` module 
-- support LuaTeX
+- optimize LuaTeX supporting
 - support pinyin
 - more grid
 - more transformation
