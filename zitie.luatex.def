@@ -1,0 +1,90 @@
+% maybe use pdf_literal will be better
+\cs_new:Npn \zitie_stroke_chars:nn #1#2
+  { \special { pdf:code ~ q ~ #1 } #2 \special { pdf:code ~ Q } }
+\cs_new:Npn \zitiestrokechars { \zitie_stroke_chars:nn }
+
+% \RequirePackage {luatexja-fontspec} % using ctex currently
+%%% require on ctex
+\RequirePackage {ctex}
+%% copy from xeCJK
+\prg_new_conditional:Npnn \__zitie_if_blank_x:n #1 { p , T , F , TF }
+  {
+    \if_case:w \tex_strcmp:D { } {#1} \exp_stop_f:
+      \prg_return_true:
+    \else:
+      \if_case:w \tex_strcmp:D { ~ } {#1} \exp_stop_f:
+      \prg_return_true: \else: \prg_return_false: \fi:
+    \fi:
+  }
+\cs_new_protected:Npn \__zitie_check_num_range:nnNN #1#2#3#4
+  {
+    \bool_lazy_or:nnTF
+      { \__zitie_if_blank_x_p:n {#1} }
+      { \__zitie_if_blank_x_p:n {#2} }
+      {
+        \int_set:Nn #3 { \__zitie_if_blank_x:nTF {#1} {#2} {#1} }
+        \int_set_eq:NN #3 #4
+      }
+      {
+        \int_set:Nn #3 { \int_min:nn {#1} { \tl_if_novalue:nTF {#2} {#1} {#2} } }
+        \int_set:Nn #4 { \int_max:nn {#1} { \tl_if_novalue:nTF {#2} {#1} {#2} } }
+      }
+  }
+% dosen't work
+\prg_new_conditional:Npnn \zitie_glyph_if_exist:N #1 { p , T , F , TF }
+  { \prg_return_true: }
+\cs_set_eq:NN \__zitie_int_until_do:nn \int_until_do:nn
+%%
+
+\tl_new:N \l__zitie_cfg_tmp_tl
+\str_new:N \l__zitie_cfg_tmp_str
+\newfontfeature{FallBack}{}
+\NewDocumentCommand \zitierawCJKfamily { t+ t- m } { \CJKfamily {#3} }
+\prg_new_protected_conditional:Npnn \zitie_family_if_exist:n #1 { T , F , TF }
+  {
+    \prop_if_in:NnTF \g__ctex_ltj_family_name_prop {#1}
+      { \prg_return_true: }
+      {
+        \cs_if_exist_use:cTF { \__ctex_ltj_family_csname:n {#1} }
+          { \prg_return_true: } { \prg_return_false: }
+      }
+  }
+\cs_new:Npn \__zitie_font_select:nN #1
+  {
+    \exp_args:Nx \zitie_family_if_exist:nTF { \c_zitie_font_name_prefix_tl #1 }
+      { \fontfamily { \c_zitie_font_name_prefix_tl #1 } }
+      { \fontfamily {#1} }
+      % { \zitierawCJKfamily { \c_zitie_font_name_prefix_tl #1 } }
+      % { \zitierawCJKfamily {#1} }
+  }
+\NewDocumentCommand \zitieCJKfamily { t+ t- m }
+  { \__zitie_font_select:nN {#3} }
+\cs_generate_variant:Nn \ctex_ltj_set_family:nnn { onn }
+\cs_new:Npn \__zitie_new_font_family:nnn #1#2#3
+  {
+    \tl_set:Nx \l__zitie_cfg_tmp_tl { \c_zitie_font_name_prefix_tl #1 }
+    \__ctex_ltj_pass_args:nnnn
+      { \ctex_ltj_set_family:onn { \l__zitie_cfg_tmp_tl } } {#3} {#2}
+      { }
+  }
+\cs_new:Npn \__zitie_new_font_family_validate:nnn #1#2#3
+  {
+    \zitie_font_if_exist:nTF {#2} { \__zitie_new_font_family:nnn {#1} {#2} {#3} }
+      { \msg_warning:nnn { zitie } { font-exist } {#2} }
+  }
+%%%
+
+%% to support luatex without ctex, need to implement those functions:
+\cs_new_protected:Npn \xeCJKResetPunctClass { }
+\cs_new:Npn \zitie_token_class_dispatch:Nnnnn #1#2#3#4#5 
+  { \use_ii:nnnn }
+\prg_new_conditional:Npnn \zitie_token_if_punctuation:N #1 { p, T, F, TF } 
+  { \prg_return_false: }
+\cs_new:Npn \xeCJKDeclareCharClass #1#2 { }
+% \cs_new:Npn \zitierawCJKfamily { } %\CJKfamily
+% \prg_new_conditional:Npnn \zitie_family_if_exist:n #1 { T, F, TF } { }
+% \cs_new_nopar:Nn \__zitie_font_select:nN #1#2 { }
+% \NewDocumentCommand \zitieCJKfamily { t+ t- m } { }
+% \cs_new:Nn \__zitie_new_font_family:nnn #1#2#3 { }
+% \cs_new:Nn \__zitie_new_font_family_validate:nnn #1#2#3 { }
+%%
