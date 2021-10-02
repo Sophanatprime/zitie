@@ -1,8 +1,8 @@
 %% license LPPL 1.3c, https://www.latex-project.org/lppl/lppl-1-3c/
-\NeedsTeXFormat{LaTeX2e}[2021/06/01]
+\NeedsTeXFormat{LaTeX2e}[2020/10/01]
 \RequirePackage{ xparse , l3keys2e }
 \RequirePackage{ l3draw }
-\ProvidesExplPackage {zitie} {2021/09/23} {v1.1} {CJK character calligraphy sheet}
+\ProvidesExplPackage {zitie} {2021/10/01} {v1.4.0} {CJK character calligraphy sheet}
 \@ifpackageloaded { xcolor }
   { 
     \cs_set_nopar:Npn \zitie_color_set:nn #1#2 { \colorlet{#1}{#2} \color_set:nn {#1} {#2} } 
@@ -33,8 +33,10 @@
 \dim_new:N \l__zitie_linewidth_dim
 \cs_new_nopar:Nn \__zitie_aux_color_fill: { }
 \ior_new:N \g__zitie_file_read_ior
-\clist_new:N \g__zitie_fallback_font_clist
+\clist_new:N \l__zitie_fallback_font_clist
 \int_new:N \l__zitie_repeat_int
+\dim_new:N \l__zitie_tolerance_dim
+\int_new:N \l__zitie_tallheight_int
 
 \dim_new:N \zitiebasecharwidth
 \dim_new:N \zitiebasecharheight
@@ -99,6 +101,30 @@
     \dim_set:Nn \zitiebasecharwidth { \box_wd:N \l_zitie_basebox_box }
     \dim_set:Nn \zitiebasecharheight { \box_ht_plus_dp:N \l_zitie_basebox_box }
   }
+\dim_new:N \l__zitie_linetotal_dim
+\dim_new:N \l__zitie_linemax_dim
+\cs_new:Npn \__zitie_break_max_calc:
+  {
+    \dim_set:Nn \l__zitie_linemax_dim
+      { 
+          .5\paperwidth + .5\textwidth
+        - \marginparwidth - \marginparsep
+        + \l__zitie_tolerance_dim 
+      }
+  }
+\cs_new_protected:Npn \__zitie_break_default:
+  {
+    \if_dim:w \l__zitie_linemax_dim > \l__zitie_linetotal_dim
+      \tex_advance:D \l__zitie_linetotal_dim by 1.1\zitieboxwd
+      \if_dim:w \l__zitie_linemax_dim < \l__zitie_linetotal_dim
+        \dim_zero:N \l__zitie_linetotal_dim \break
+      \else: \nobreak
+      \fi:
+    \else:
+      \dim_zero:N \l__zitie_linetotal_dim \break
+    \fi:
+  }
+  
 \cs_new_nopar:Npn \zitie_frame_type:n #1 { __zitie_frame_construct_type_ #1 :nnnnnn } % x1, y1, x2, y2, x times, y times
 \cs_new_nopar:Npn \zitie_frame_type_c:n #1 { \use:c { __zitie_frame_construct_type_ #1 :nnnnnn } }
 \cs_new_nopar:Npn \__zitie_resize:n #1 { __zitie_processor_resize_ #1 :n }
@@ -130,7 +156,7 @@
   {
     \exp_args:Nf \zitie_glyph_if_exist:NTF #1 {#1}
       {
-        \clist_pop:NNTF \g__zitie_fallback_font_clist \l__zitie_tmpa_tl
+        \clist_pop:NNTF \l__zitie_fallback_font_clist \l__zitie_tmpa_tl
           {
             \zitie_family_if_exist:nTF { \c_zitie_font_name_prefix_tl \l__zitie_tmpa_tl }
               {
@@ -258,6 +284,15 @@
     debug .default:n = true ,
     repeat .int_set:N = \l__zitie_repeat_int ,
     repeat .initial:n = 1 ,
+    tolerance .dim_set:N = \l__zitie_tolerance_dim ,
+    tolerance .initial:n = 1em ,
+    break .choice: ,
+    break / default .code:n = { \cs_set_eq:NN \__zitie_break: \__zitie_break_default: } ,
+    break / allowbreak .code:n = { \cs_set_eq:NN \__zitie_break: \allowbreak } ,
+    break / unknown .code:n = { \cs_set_eq:NN \__zitie_break: #1 } ,
+    break .initial:n = allowbreak ,
+    tallheight .int_set:N = \l__zitie_tallheight_int ,
+    tallheight .initial:n = 1000 ,
 
     savefontname .bool_set:N = \l__zitie_savefontname_bool ,
     savefontname .initial:n = false ,
@@ -265,9 +300,12 @@
     fallback .bool_set:N = \l__zitie_font_fallback_bool ,
     fallback .initial:n = false ,
     fallback .default:n = true ,
-    fallbackfont .clist_set:N = \g__zitie_fallback_font_clist ,
+    fallbackfont .clist_set:N = \l__zitie_fallback_font_clist ,
     fallbackfont .initial:n = { 宋体 } ,
-    fallbackfont+ .code:n = { \clist_put_right:Nn \g__zitie_fallback_font_clist {#1} } ,
+    fallbackfont+ .code:n = { \clist_put_right:Nn \l__zitie_fallback_font_clist {#1} } ,
+    validateglyph .bool_set:N = \l__zitie_validate_glyph_bool ,
+    validateglyph .initial:n = false ,
+    validateglyph .default:n = true ,
   }
 
 \hook_new_pair:nn { zitie/processor/before } { zitie/processor/after }
@@ -287,7 +325,7 @@
   }
 \NewDocumentCommand \zitienewprocessorrule { O{1} >{\TrimSpaces} m > {\TrimSpaces} m m } 
   { \zitie_new_process_rule:nnnn {#2} {#3} {#1} {#4} }
-\cs_set_eq:NN \zitienewrule \zitienewprocessorrule
+\cs_new_protected:Npn \zitienewrule { \zitienewprocessorrule }
 \NewDocumentCommand \zitieuseprocessorrule { O{1} m m }
   { \zitie_processor_c:nnn {#1} {#2} {#3} }
 \zitie_new_process_rule:nnn { punctuation } { onlast }
@@ -408,6 +446,8 @@
     \zitie_processor_c:n { position } \l__zitie_box_coffin
     \group_end:
   }
+\cs_new_protected:Npn \zitie_single_construct_f:nN 
+  { \exp_args:Nnf \zitie_single_construct:nN }
 \cs_new:Npn \zitie_single_construct:N #1
   {
     \group_begin:
@@ -416,6 +456,48 @@
     \hcoffin_gset:Nn \l__zitie_box_coffin
       { \__zitie_single_construct_o:N \l__zitie_curr_char_tl }
     \zitie_processor_c:n { position } \l__zitie_box_coffin
+    \group_end:
+  }
+\cs_new_protected:Npn \zitie_single_construct_f:N 
+  { \exp_args:Nf \zitie_single_construct:N }
+\bool_new:N \g__zitie_glyph_exist_bool
+\cs_new:Npn \zitie_single_validate_glyph_construct:nN #1#2
+  {
+    \group_begin:
+    \tl_if_empty:nF {#1} { \keys_set:nn { zitie } {#1} }
+    { 
+      \zitieCJKfamily+ { \l__zitie_font_tl } 
+      \exp_after:wN \zitie_glyph_if_exist:NTF #2 
+        { \bool_gset_true:N \g__zitie_glyph_exist_bool }
+        { \bool_gset_false:N \g__zitie_glyph_exist_bool }
+    }
+    \bool_if:NT \g__zitie_glyph_exist_bool
+      {
+        \__zitie_calc_basechar_w_h:
+        \tl_set:Nf \l__zitie_curr_char_tl {#2}
+        \hcoffin_set:Nn \l__zitie_box_coffin
+          { \__zitie_single_construct_o:N \l__zitie_curr_char_tl }
+        \zitie_processor_c:n { position } \l__zitie_box_coffin
+      }
+    \group_end:
+  }
+\cs_new:Npn \zitie_single_validate_glyph_construct:N #1
+  {
+    \group_begin:
+    { 
+      \zitieCJKfamily+ { \l__zitie_font_tl } 
+      \exp_after:wN \zitie_glyph_if_exist:NTF #1
+        { \bool_gset_true:N \g__zitie_glyph_exist_bool }
+        { \bool_gset_false:N \g__zitie_glyph_exist_bool }
+    }
+    \bool_if:NT \g__zitie_glyph_exist_bool
+      {
+        \__zitie_calc_basechar_w_h:
+        \tl_set:Nf \l__zitie_curr_char_tl {#1}
+        \hcoffin_gset:Nn \l__zitie_box_coffin
+          { \__zitie_single_construct_o:N \l__zitie_curr_char_tl }
+        \zitie_processor_c:n { position } \l__zitie_box_coffin
+      }
     \group_end:
   }
 \cs_new:Npn \__zitie_single_construct:N #1
@@ -563,6 +645,7 @@
     \exp_after:wN \draw_path_corner_arc:nn \l__zitie_frame_arc_tl
     \cs_if_eq:NNF \__zitie_aux_color_fill: \c_empty_tl
       { 
+        \__zitie_aux_color_fill:
         \draw_path_rectangle_corners:nn { 0 , 0 } { \zitiewidth , \zitieheight }
         \draw_path_use_clear:n { fill } 
       }
@@ -573,7 +656,7 @@
 \zitie_new_frame_construct:nn { 口 }
   {
     \draw_path_rectangle_corners:nn { #1 , #2 } { #3 , #4 }
-    \draw_path_use_clear:n { stroke }
+    \draw_path_use_clear:n { stroke , clip }
   }
 \zitie_new_frame_construct:nn { 十 }
   {
@@ -619,13 +702,42 @@
     \fi:
   }
 
-\hook_new:n { zitie/repeat }
 \NewDocumentCommand \zitienewfont { s } { \IfBooleanTF {#1} { \zitie_new_font:nnn } { \zitie_new_font:n } }
+\hook_new:n { zitie/repeat }
+\hook_new_pair:nn { zitie/framesingle/before } { zitie/framesingle/after }
+\NewDocumentCommand \framesingle { O{} m }
+  {
+    \group_begin:
+    \keys_set_filter:nnn { zitie } { geometry } {#1}
+    \hook_use:n { zitie/framesingle/before }
+    \bool_if:NTF \l__zitie_savefontname_bool
+      { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
+      { \tl_gset_eq:NN \zitiefontname \c_empty_tl }
+    \bool_if:NTF \l__zitie_validate_glyph_bool
+      { 
+        \zitieCJKfamily+ { \l__zitie_font_tl }
+        \exp_args:Nf \zitie_glyph_if_exist:NT #2
+          {
+            \zitie_repeat:Nnn \l__zitie_repeat_int
+              { \zitie_single_construct_f:N #2 }
+              { \hook_use:n { zitie/repeat } }
+          }
+      }
+      { 
+        \zitie_repeat:Nnn \l__zitie_repeat_int
+          { \zitie_single_construct_f:N #2 }
+          { \hook_use:n { zitie/repeat } }
+      }
+    \hook_use:n { zitie/framesingle/after }
+    \group_end:
+  }
 \hook_new_pair:nn { zitie/framezi/before } { zitie/framezi/after }
 \NewDocumentCommand \framezi { s O{} m } 
   { 
     \group_begin:
     \tl_if_empty:nF {#2} { \keys_set_filter:nnn { zitie } { geometry } {#2} }
+    \tex_pretolerance:D = 10000
+    \__zitie_break_max_calc:
     \hook_use:n { zitie/framezi/before }
     \bool_if:NTF \l__zitie_savefontname_bool
       { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
@@ -633,12 +745,12 @@
     \IfBooleanTF {#1}
       { 
         \zitie_repeat:Nnn \l__zitie_repeat_int
-          { \tl_map_inline:Nn #3 { \zitie_single_construct:N ##1 \allowbreak } } 
+          { \tl_map_inline:Nn #3 { \zitie_single_construct:N ##1 \__zitie_break: } } 
           { \hook_use:n { zitie/repeat } }
       }
       { 
         \zitie_repeat:Nnn \l__zitie_repeat_int
-          { \tl_map_inline:nn {#3} { \zitie_single_construct:N ##1 \allowbreak } }
+          { \tl_map_inline:nn {#3} { \zitie_single_construct:N ##1 \__zitie_break: } }
           { \hook_use:n { zitie/repeat } }
       }
     \hook_use:n { zitie/framezi/after }
@@ -650,6 +762,8 @@
   {
     \group_begin:
     \tl_if_empty:nF {#1} { \keys_set_filter:nnn { zitie } { geometry } {#1} }
+    \tex_pretolerance:D = 10000
+    \__zitie_break_max_calc:
     \hook_use:n { zitie/framerange/before }
     \bool_if:NTF \l__zitie_savefontname_bool
       { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
@@ -666,8 +780,8 @@
                   {
                     \group_begin:
                     \tl_set:Nf \l__zitie_curr_char_tl { \tex_Uchar:D \l__zitie_begin_int }
-                    \__zitie_single_construct_o:N \l__zitie_curr_char_tl 
-                    \group_end: \allowbreak
+                    \zitie_single_construct_f:N \l__zitie_curr_char_tl 
+                    \group_end: \__zitie_break:
                     \int_incr:N \l__zitie_begin_int
                   } 
               }
@@ -679,11 +793,69 @@
     \group_end:
   }
 \NewDocumentCommand \__zitie_frame_range_aux:Nnw { m >{ \SplitArgument { 1 } { -> } } m } { #1 #2 }
+\hook_new_pair:nn { zitie/frametallrange/before } { zitie/frametallrange/after }
+\hook_new:n { zitie/frametallrange/range }
+\int_new:N \l__zitie_tall_tmp_int
+\NewDocumentCommand \frametallrange { O{} m }
+  {
+    \group_begin:
+    \tl_if_empty:nF {#1} { \keys_set_filter:nnn { zitie } { geometry } {#1} }
+    \tex_pretolerance:D = 10000
+    \__zitie_break_max_calc:
+    \hook_use:n { zitie/frametallrange/before }
+    \bool_if:NTF \l__zitie_savefontname_bool
+      { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
+      { \tl_gset_eq:NN \zitiefontname \c_empty_tl }
+    \int_decr:N \l__zitie_tallheight_int
+    \zitie_repeat:Nnn \l__zitie_repeat_int
+      {
+        \clist_map_inline:nn {#2}
+          {
+            \str_if_eq:nnF {##1} { -> }
+              { 
+                \__zitie_frame_range_aux:Nnw \__zitie_check_num_range:nnNN {##1} 
+                  \l__zitie_begin_int \l__zitie_end_int
+                \__zitie_split_range:nnnNn \l__zitie_begin_int \l__zitie_end_int { \l__zitie_tallheight_int }
+                  \__zitie_tallrange_split_do:nn 
+                  { \__zitie_tall_par: }
+              }
+            \hook_use:n { zitie/frametallrange/range }
+          }
+      }
+      { \hook_use:n { zitie/repeat } }
+    \hook_use:n { zitie/frametallrange/after }
+    \group_end:
+  }
+\cs_new:Npn \__zitie_tallrange_split_do:nn #1#2
+  {
+    \int_set:Nn \l__zitie_tall_tmp_int {#1}
+    \int_until_do:nn { \l__zitie_tall_tmp_int > #2 }
+      {
+        \group_begin:
+        \tl_set:Nf \l__zitie_curr_char_tl { \tex_Uchar:D \l__zitie_tall_tmp_int }
+        \zitie_single_construct_f:N \l__zitie_curr_char_tl 
+        \group_end: \__zitie_break:
+        \int_incr:N \l__zitie_tall_tmp_int
+      } 
+  }
+\cs_new:Npn \__zitie_split_range:nnnNn #1#2#3#4#5
+  {
+    \int_set:Nn \l__zitie_begin_int {#1}
+    \int_compare:nNnTF { \l__zitie_begin_int + #3 } > {#2}
+      { #4 { \l__zitie_begin_int } {#2} #5 }
+      { 
+        #4 { \l__zitie_begin_int } { \l__zitie_begin_int + #3 } 
+        #5
+        \__zitie_split_range:nnnNn { \l__zitie_begin_int + #3 + 1 } {#2} {#3} #4 {#5}
+      }
+  }
+\cs_new:Npn \__zitie_tall_par: % TeXbook 14.15
+  { {\parfillskip=0pt\par\parskip=0pt\noindent} }
 
 \cs_new:Npn \__zitie_construct_loop:N #1
   { 
     \tl_if_eq:nnTF #1 \par { \par \hook_use:n { zitie/zitieframe/par } \__zitie_construct_loop:N }
-      { \quark_if_nil:nF {#1} { \zitie_single_construct:N #1 \allowbreak \__zitie_construct_loop:N } } 
+      { \quark_if_nil:nF {#1} { \zitie_single_construct:N #1 \__zitie_break: \__zitie_construct_loop:N } } 
   }
 \hook_new_pair:nn { zitie/zitieframe/before } { zitie/zitieframe/after }
 \hook_new:n { zitie/zitieframe/par }
@@ -692,6 +864,8 @@
     \group_begin:
     \lineskip=0pt \parindent=0pt \parskip=0pt \raggedright
     \tl_if_empty:nF {#2} { \keys_set:nn { zitie } {#2} }
+    \tex_pretolerance:D = 10000
+    \__zitie_break_max_calc:
     \hook_use:n { zitie/zitieframe/before }
     #1
     \bool_if:NTF \l__zitie_savefontname_bool
@@ -707,6 +881,8 @@
   {
     \group_begin:
     \tl_if_empty:nF {#2} { \keys_set_filter:nnn { zitie } { geometry } {#2} }
+    \tex_pretolerance:D = 10000
+    \__zitie_break_max_calc:
     \hook_use:n { zitie/framezifile/before }
     \bool_if:NTF \l__zitie_savefontname_bool
       { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
@@ -715,7 +891,7 @@
       {
         \file_get:nnN {#3} { } \l__zitie_file_chars_tl
         \zitie_repeat:Nnn \l__zitie_repeat_int
-          { \tl_map_inline:Nn \l__zitie_file_chars_tl { \zitie_single_construct:N ##1 \allowbreak } }
+          { \tl_map_inline:Nn \l__zitie_file_chars_tl { \zitie_single_construct:N ##1 \__zitie_break: } }
           { \hook_use:n { zitie/repeat } }
       }
       {
@@ -723,13 +899,75 @@
         \zitie_repeat:Nnn \l__zitie_repeat_int
           {
             \ior_map_inline:Nn \g__zitie_file_read_ior
-              { \tl_map_inline:nn {##1} { \zitie_single_construct:N ####1 \allowbreak } }
+              { \tl_map_inline:nn {##1} { \zitie_single_construct:N ####1 \__zitie_break: } }
           }
           { \hook_use:n { zitie/repeat } }
         \ior_close:N \g__zitie_file_read_ior
       }
     \hook_use:n { zitie/framezifile/after }
     \group_end:
+  }
+\hook_new_pair:nn { zitie/framezitallfile/before } { zitie/framezitallfile/after }
+\NewDocumentCommand \framezitallfile { s O{} m }
+  {
+    \group_begin:
+    \tl_if_empty:nF {#2} { \keys_set_filter:nnn { zitie } { geometry } {#2} }
+    \tex_pretolerance:D = 10000
+    \__zitie_break_max_calc:
+    \hook_use:n { zitie/framezitallfile/before }
+    \bool_if:NTF \l__zitie_savefontname_bool
+      { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
+      { \tl_gset_eq:NN \zitiefontname \c_empty_tl }
+    \int_decr:N \l__zitie_tallheight_int
+    \IfBooleanTF {#1}
+      {
+        \file_get:nnN {#3} { } \l__zitie_file_chars_tl
+        \zitie_repeat:Nnn \l__zitie_repeat_int
+          { \__zitie_tallfile_get_aux:N \l__zitie_file_chars_tl }
+          { \hook_use:n { zitie/repeat } }
+      }
+      {
+        \ior_open:Nn \g__zitie_file_read_ior {#3}
+        \zitie_repeat:Nnn \l__zitie_repeat_int
+          { \__zitie_tallfile_ior_aux:N \g__zitie_file_read_ior }
+          { \hook_use:n { zitie/repeat } }
+        \ior_close:N \g__zitie_file_read_ior
+      }
+    \hook_use:n { zitie/framezitallfile/after }
+    \group_end:
+  }
+\cs_new:Npn \__zitie_tallfile_get_aux:N #1
+  {
+    \int_zero:N \l__zitie_tall_tmp_int
+    \tl_map_inline:Nn #1
+      {
+        \zitie_single_construct:N ##1
+        \if_int_compare:w \l__zitie_tall_tmp_int < \l__zitie_tallheight_int
+          \int_incr:N \l__zitie_tall_tmp_int
+          \__zitie_break:
+        \else:
+          \int_zero:N \l__zitie_tall_tmp_int
+          \__zitie_tall_par:
+        \fi:
+      }
+  }
+\cs_new:Npn \__zitie_tallfile_ior_aux:N #1
+  {
+    \int_zero:N \l__zitie_tall_tmp_int
+    \ior_map_inline:Nn #1
+      {
+        \tl_map_inline:nn {##1}
+          {
+            \zitie_single_construct:N ####1
+            \if_int_compare:w \l__zitie_tall_tmp_int < \l__zitie_tallheight_int
+              \int_incr:N \l__zitie_tall_tmp_int
+              \__zitie_break:
+            \else:
+              \int_zero:N \l__zitie_tall_tmp_int
+              \__zitie_tall_par:
+            \fi:
+          }
+      }
   }
 
 
@@ -934,19 +1172,20 @@
       { \exp_args:No \draw_dash_pattern:nn { \g__zitie_background_dash_pattern_tl } { 0pt } }
     \draw_linewidth:n { \g__zitie_background_linewidth_dim }
     \draw_path_rectangle_corners:nn 
-      { 0cm , 0cm } 
+      { 0cm - .5\g__zitie_background_linewidth_dim , 0cm - .5\g__zitie_background_linewidth_dim } 
       { 
-        \g__zitie_background_x_right_dim - \g__zitie_background_x_left_dim ,
-        \g__zitie_background_y_bottom_dim - \g__zitie_background_y_top_dim 
+        \g__zitie_background_x_right_dim - \g__zitie_background_x_left_dim + .5\g__zitie_background_linewidth_dim ,
+        \g__zitie_background_y_bottom_dim - \g__zitie_background_y_top_dim + .5\g__zitie_background_linewidth_dim
       }
     \cs_if_eq:NNTF \__zitie_background_aux_color_fill: \c_empty_tl
       { \draw_path_use_clear:n { clip } }
       { \color_fill:n { zitiebackgroundfillcolor } \draw_path_use_clear:n { clip , fill } }
     \color_stroke:n { zitiebackgroundframecolor }
     \zitie_background_frame_type_c:n { \g__zitie_background_frametype_tl }
-      { 0cm } { 0cm } 
-      { \g__zitie_background_x_right_dim - \g__zitie_background_x_left_dim }
-      { \g__zitie_background_y_bottom_dim - \g__zitie_background_y_top_dim }
+      { 0cm - .5\g__zitie_background_linewidth_dim } 
+      { 0cm - .5\g__zitie_background_linewidth_dim } 
+      { \g__zitie_background_x_right_dim - \g__zitie_background_x_left_dim + .5\g__zitie_background_linewidth_dim }
+      { \g__zitie_background_y_bottom_dim - \g__zitie_background_y_top_dim + .5\g__zitie_background_linewidth_dim }
       { \g__zitie_background_boxwidth_dim } 
       { \g__zitie_background_boxheight_dim }
     \draw_end:
@@ -962,9 +1201,7 @@
 \zitie_background_new_frame_construct:nn { none } { }
 \zitie_background_new_frame_construct:nn { 口 }
   {
-    \draw_path_grid:nnnn { #5 } { #6 } 
-      { #1-.5\g__zitie_background_linewidth_dim , #2-.5\g__zitie_background_linewidth_dim } 
-      { #3 , #4 }
+    \draw_path_grid:nnnn { #5 } { #6 } { #1 , #2 } { #3 , #4 }
     \draw_path_use_clear:n { stroke }
   }
 \zitie_background_new_frame_construct:nn { 十 }
@@ -992,10 +1229,12 @@
     \int_set:Nn \l__zitie_background_tmpb_int { \fp_to_int:n { ceil( \dim_ratio:nn {(#4)-(#2)} {#6} ) } }
     \if_int_compare:w \l__zitie_background_tmpa_int < \l__zitie_background_tmpb_int
       \__zitie_background_frame_construct_aux_cross:nnnnnnnn 
-        {#1} {#2} {#3} {#4} {#5} {#6} { \l__zitie_background_tmpb_int } { }
+        {#1+\g__zitie_background_linewidth_dim} {#2+\g__zitie_background_linewidth_dim} 
+        {#3} {#4} {#5} {#6} { \l__zitie_background_tmpb_int } { }
     \else:
       \__zitie_background_frame_construct_aux_cross:nnnnnnnn 
-        {#1} {#2} {#3} {#4} {#5} {#6} { \l__zitie_background_tmpa_int } { }
+        {#1+\g__zitie_background_linewidth_dim} {#2+\g__zitie_background_linewidth_dim} 
+        {#3} {#4} {#5} {#6} { \l__zitie_background_tmpa_int } { }
     \fi:
     \draw_path_use_clear:n { stroke }
   }
@@ -1033,7 +1272,16 @@
     \zitie_background_frame_type_c:n { 十 } {#1} {#2} {#3} {#4} {#5} {#6}
     \zitie_background_frame_type_c:n { × } {#1} {#2} {#3} {#4} {#5} {#6}
   }
-
+\zitie_background_new_frame_construct:nn { 二 }
+  {
+    \draw_path_grid:nnnn { #3-#1 } { #6 } { #1 , #2 } { #3 , #4 }
+    \draw_path_use_clear:n { stroke }
+  }
+\zitie_background_new_frame_construct:nn { || }
+  {
+    \draw_path_grid:nnnn { #5 } { #4-#2 } { #1 , #2 } { #3 , #4 }
+    \draw_path_use_clear:n { stroke }
+  }
 %%% end of background
 \else:
 \msg_new:nnn { zitie } { background } 
@@ -1054,6 +1302,8 @@
     \zhlipsum_if_exist:nTF {#3}
       {
         \tl_if_empty:nF {#1} { \keys_set_filter:nnn { zitie } { geometry } {#1} }
+        \tex_pretolerance:D = 10000
+        \__zitie_break_max_calc:
         \hook_use:n { zitie/framezhlipsum/before }
         \bool_if:NTF \l__zitie_savefontname_bool
           { \tl_gset_eq:NN \zitiefontname \l__zitie_font_tl }
@@ -1067,11 +1317,11 @@
                 \seq_map_inline:Nn \l__zhlipsum_par_num_seq
                   {
                     \tl_map_inline:cn { \__zitie_zhlipsum_paras:nn {#3} {##1} }
-                      { \zitie_single_construct:N ####1 \allowbreak }
+                      { \zitie_single_construct:N ####1 \__zitie_break: }
                     \hook_use:n { zitie/framezhlipsum/paragraph }
                   }
                 \tl_map_inline:cn { \__zitie_zhlipsum_paras:nn {#3} { \l__zhlipsum_tmpa_tl } }
-                  { \zitie_single_construct:N ##1 \allowbreak }
+                  { \zitie_single_construct:N ##1 \__zitie_break: }
               }
           }
           { \hook_use:n { zitie/repeat } }

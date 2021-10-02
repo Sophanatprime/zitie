@@ -4,10 +4,11 @@
 \usepackage{geometry}
 \usepackage{xcoffins}
 
-\def\zitieversion{1.3}
-\def\zitiedate{农历二〇二一年八月十九}
+\def\zitieversion{1.4.0}
+\def\zitiedate{农历二〇二一年八月廿五}
 \def\zitieframetitle{
-  \framezi[width=3\ccwd,fillcolor=black,charcolor=red!75!black,font=文征明行草简繁,anchor=west]{字帖}%
+  \framezi[width=3\ccwd,fillcolor=black,charcolor=red!75!black,font=文征明行草简繁,anchor=west]{字}%
+  \framezi[width=3\ccwd,fillcolor=black,charcolor=red!75!black,font=文征明行草简繁,position*={\TypesetCoffin##1[l,vc](-.4pt,0pt)}]{帖}%
   \framezi[width=1.5\ccwd,font=楷体,position*={\TypesetCoffin##1[l,b](-.2pt,-.2pt)}]{宏}%
   \framezi[width=1.5\ccwd,font=楷体,position*={\TypesetCoffin##1[r,t](0pt,.2pt)}]{包}%
 }
@@ -27,11 +28,11 @@
 }
 \title{\texorpdfstring{\zitieframetitle}{\zitietexttitle}}
 \date{\texorpdfstring{\framezi*[width=2\ccwd,font=文征明行草简繁,anchor=west]{\zitiedate}}{\zitiedate} v\zitieversion}
-\author{雾月, Longaster \texttt{longaster@163.com}}
+\author{雾月, Longaster (\texttt{longaster@163.com})}
 
 \begin{document}
 
-\newgeometry{textheight=27cm,textwidth=17cm,bottom=1.7cm}
+\newgeometry{nomarginpar,textheight=27cm,textwidth=17cm,bottom=1.7cm}
 
 \zitiesetup{holdbasecharheight=true}
 
@@ -80,7 +81,7 @@
   不見天涯人不回。
 }\hfill ——《少年歌行》
 
-{\heiti\small 注：本文档中的非商业的字体版权为原字体公司（北京方正有限公司及其它相关公司），此处使用该字体仅为显示该宏包的排版效果，不作商业用途。本文档\pkg{zitie.tex}和相应的\pkg{zitie.sty}源文件使用 \href{https://www.latex-project.org/lppl/lppl-1-3c/}{LPPL 1.3c 协议。}}
+{\heiti\small 注：本文档中的非商业的字体版权为原字体公司（北京方正有限公司及其它相关公司），此处使用该字体仅为显示该宏包的排版效果，不作商业用途。本文档\pkg{zitie.tex}和相应的\pkg{zitie.sty}源文件使用 \href{https://www.latex-project.org/lppl/lppl-1-3c/}{LPPL 1.3c 协议} 开源。}
 \zitiesetup{holdbasecharheight=false}
 
 \clearpage
@@ -123,8 +124,11 @@
   \cs{zitieCJKfamily} 和 \pkg{xeCJK} 宏包的 \cs{CJKfamily} 作用完全相同，只不过首先判断该 \meta{font family} 是否被 \cs{zitienewfont} 声明，若没有，则再使用 \cs{CJKfamily} 进行处理。
 \end{function}
 
-\begin{function}{\framezi,\framerange,\framezifile}
+\changes{v1.3.2}{2021/09/26}{单个range可达3200字。}
+\changes{v1.4.0}{2021/10/01}{新增 \cs{framesingle} 命令。}
+\begin{function}{\framesingle,\framezi,\framerange,\framezifile}
   \begin{syntax}
+    \cs{framesingle} \oarg{key-val} \marg{字}
     \cs{framezi} * \oarg{key-val} \marg{字或词句}
     \cs{framerange} \oarg{key-val} \marg{逗号分隔的16进制序列}
     \cs{framezifile} * \oarg{key-val} \marg{文件名}
@@ -135,18 +139,21 @@
 
   \meta{字或词句} 应仅包含类代码为 11 或 12 的字符，即正常情况下输入的字符，不应包含 \TeX 控制序列即其它特殊字符。\cs{framezi} 带星号的版本接收一个控制序列，这个序列包含想要网格化的字。
 
-  \meta{逗号分隔的16进制序列} 应使用如下的形式：\verb|"4E00 -> "4E27, "4E30| 或 \verb|`一 -> `丢, `丰|，与其它设置字符序列的宏包相似（如 \pkg{xeCJK} 宏包的 \cs{xeCJKDeclareSubCJKBlock}）。注意，由于网格化操作需要大量的计算，因此单个 \meta{range} 不应太大，依据编译环境而定，一般不应超过 2000 个，否则可能无法成功编译。其它命令中也是如此。若要使用大量字符，则可以使用 \pkg{background} 模块及其 \opt{xrange}、\opt{yrange} 特性。
+  \meta{逗号分隔的16进制序列} 应使用如下的形式：\verb|"4E00 -> "4E27, "4E30| 或 \verb|`一 -> `丢, `丰|，与其它设置字符序列的宏包相似（如 \pkg{xeCJK} 宏包的 \cs{xeCJKDeclareSubCJKBlock}）。注意，由于网格化操作需要大量的计算，因此单个 \meta{range} 不应太大，依据编译环境而定，一般不应超过 3200 个，否则可能无法成功编译。其它命令中也是如此。若要使用大量字符，则可以使用 \cs{frametallrange}、\cs{framezitallfile} 等 \verb|tall| 型命令，或 \pkg{background} 模块及其 \opt{xrange}、\opt{yrange} 特性。
 
   \meta{文件名} 为想要网格化的文字的文件名。\cs{framezifile} 带 \verb|*| 的版本，可在 \meta{key-val} 中使用 \opt{filepath} 设置文件搜索路径，详见第 \ref{sec:options} 节的说明。带星号和不带星号的版本实现略有差异，速度也可能不一样。
 
   当连续多次使用 \cs{framezi} 等命令时，为去掉后面的空白，可使用 \opt{\%} 注释符。
+
+  \cs{framesingle} 专门用于制作单个字的方框。
 \end{function}
 
 \begin{function}{
+  zitie/framesingle/before, zitie/framesingle/after,
   zitie/framezi/before, zitie/framezi/after,
   zitie/framerange/before, zitie/framerange/after,
   zitie/framerange/range,
-  zitie/framezifile/before, zitie/framezifile/after
+  zitie/framezifile/before, zitie/framezifile/after,
 }
   这三个命令还各自定义了钩子（hook），其中带有 \verb|after| 为 \verb|reversed|，即先添加的后执行。\verb|before| 为选项设置完成后执行，\verb|after| 为整个命令执行完之后执行。其中 \verb|zitie/framerange/range| 为每一个列表均执行一次，包括无效的和最后一次。
 
@@ -171,6 +178,28 @@
 
   \verb|zitie/zitieframe/par| 钩子为环境中的每个段落分段后要执行的命令。
 \end{function}
+
+\begin{function}{
+  \frametallrange,
+  \framezitallfile,
+  zitie/frametallrange/before,
+  zitie/frametallrange/after,
+  zitie/frametallrange/range,
+  zitie/framezitallfile/before,
+  zitie/framezitallfile/after
+}
+  \begin{syntax}
+    \cs{frametallrange} \oarg{key-val} \marg{逗号分隔的16进制序列}
+    \cs{framezitallfile} * \oarg{key-val} \marg{文件名}
+  \end{syntax}
+  一般情况下 \pkg{zitie} 宏包的方框化命令只能容纳不超过3200词。但 \cs{frametallrange} 和 \cs{framezitallfile} 却摆脱了这种限制，即使是2万词也不在话下。不过在这种情况下，编译是十分慢的。若要保证速度，可以使用 \pkg{background} 模块及其 \opt{xrange}、\opt{yrange} 特性。
+\end{function}
+
+\begin{texnote}
+  \verb|tall| 类型命令隐式地在固定词数后进行分段，这个词数由 \opt{tallheight} 选项来控制，见第 \ref{sec:options} 节。
+
+  为了执行速度，\opt{tallheight} 需要手动控制。
+\end{texnote}
 
 \section{选项}\label{sec:options}
 
@@ -264,6 +293,7 @@
 由于 \LuaTeX-ja 的实现问题，目前这一方法在 \LuaTeX{} 中效果并不好。
 \end{texnote}
 
+\changes{v1.4.0}{2021/10/01}{修改了方框的行为，使得当使用设置 \opt{framearc} 时，arc外的线将隐藏。}
 \begin{function}{frametype,resize}
   \begin{syntax}
     frametype = <none|口|十|田|×|米|咪|...> \init{none}
@@ -455,12 +485,17 @@
 \end{function}
 
 \changes{v1.3}{2021/09/25}{新增 \opt{repeat} 功能。}
+\changes{v1.3.2}{2021/09/26}{新增 \opt{break}、\opt{tolerance} 功能。}
 \begin{function}{
   repeat,
+  break,
+  tolerance,
   zitie/repeat
 }
   \begin{syntax}
     repeat = <integer> \init{1}
+    break  = <default|allowbreak|...> \init{allowbreak}
+    tolerance = <dim> \init{1em}
   \end{syntax}
   设置 \cs{framezi} 等命令中的字符重复次数。注意是将整体重复 \meta{integer} 次，而不是将单个字符重复 \meta{integer} 次，再进行下一个字符的处理。
 
@@ -471,6 +506,29 @@
     \framezi[width=1cm,repeat=3]{好的}
   \end{verbatim}
   \framezi[width=1cm,repeat=3]{好的}
+
+  \opt{break} 设置单个字符后的断行方法。默认为 \opt{allowbreak}，即将 \tn{allowbreak} 插入到构造好的盒子后。
+  \opt{tolerance} 设置断行的允许值，影响 \opt{break} 值为 \opt{default} 时的断行效果，\opt{tolerance} 大，则可能造成 Overfull。
+
+  \opt{break} 和 \opt{tolerance} 仍是实验性的。
+\end{function}
+
+\changes{v1.4.0}{2021/10/01}{新增 \opt{tallheight} 选项。}
+\begin{function}{tallheight}
+  \begin{syntax}
+    tallheight = <integer> \init{1000}
+  \end{syntax}
+  \opt{tallheight} 选项控制 \verb|tall| 型命令隐式地在 \meta{integer} 个词后进行分段。因此，为了保证排版美观，\opt{tallheight} 最好为每行能容纳词数的倍数。而且这个值也受单个最大能处理的词数的限制，即不能超过3200。
+\end{function}
+
+\changes{v1.4.0}{2021/10/01}{新增 \opt{validateglyph} 选项。}
+\begin{function}{validateglyph}
+  \begin{syntax}
+    validateglyph = \TTF \init{false}
+  \end{syntax}
+  这个选项设置为真时，将先判断使用的字体是否包含该字形，若不包含，则忽略该字符。判断字形时不会考虑 FallBack 字体。
+
+  目前这个选项仅在 \cs{framesingle} 命令中有效。
 \end{function}
 
 \begin{function}{
@@ -481,7 +539,7 @@
     \cs{zitiesetup} \marg{key-val}
     \cs{zitiecolorlet} \marg{name} \oarg{model} \marg{value}
   \end{syntax}
-  \cs{zitiesetup} 为 \pkg{zitie} 宏包的设置命令，这个命令设置的值在当前组中有效。\cs{zitiecolorlet} 定义新的颜色。注意，若加载 \pkg{xcolor} 宏包，使用 \tn{colorlet} 命令定义的颜色无法在 \pkg{zitie} 宏包中使用，必须使用 \cs{zitiecolorlet} 来定义颜色。
+  \cs{zitiesetup} 为 \pkg{zitie} 宏包的设置命令，这个命令设置的值在当前组中有效。\cs{zitiecolorlet} 定义新的颜色。注意，若加载 \pkg{xcolor} 宏包，使用 \tn{colorlet} 命令定义的颜色无法在 \pkg{zitie} 宏包的选项中使用，必须使用 \cs{zitiecolorlet} 来定义颜色。
 \end{function}
 
 \begin{function}{\zitienewprocessorrule,\zitienewrule,\zitieuseprocessorrule}
@@ -561,7 +619,7 @@
   \end{syntax}
   设置背景格子的大小。
 
-  \opt{boxwidth} 和 \opt{boxheight} 具有更高的优先级，若设置了，则背景每个格子的宽高为所设置的值，否则，使用 \meta{framewidth}、\meta{frameheight} 及 \meta{colboxes}、\meta{rowboxes} 来计算大小。
+  \opt{boxwidth} 和 \opt{boxheight} 具有更高的优先级，若设置了，则背景每个格子的宽高为所设置的值，否则，使用 \opt{framewidth}、\opt{frameheight} 及 \opt{colboxes}、\opt{rowboxes} 来计算大小。
 
   \opt{onpaper} 设置 \verb|frameheight=\paperheight, framewidth=\paperwidth|，
   \opt{ontext} 设置 \verb|frameheigh=\textheight, framewidth=\textwidth|。
@@ -576,7 +634,18 @@
   fillcolor*,
   dashpattern
 }
-  和 \cs{framezi} 等命令的选项相同，但二者互不影响。
+  \begin{syntax}
+    frametype   = <none|口|十|田|×|米|咪|二|(||)> \init{none}
+    linewidth   = <dim> \init{0.4pt}
+    framecolor  = <color expr> \init{black}
+    framecolor  = \marg{model(s)} \marg{value(s)}
+    fillcolor   = <color expr>
+    fillcolor*  = \marg{model(s)} \marg{value(s)}
+    dashpattern = \{ <dim1>, <dim2>, ... \}
+  \end{syntax}
+  和 \cs{framezi} 等命令的选项作用相同，但二者互不影响。
+
+  其中 \opt{frametype} 的值 \verb|二| 为画外侧方框和横线，\opt{frametype} 的值 \verb=||= 为画外侧方框和竖线。
 
   颜色分别保存在 \verb|zitiebackgroundframecolor|，\verb|zitiebackgroundfillcolor| 颜色名中。可在 \tn{color} 中直接使用，也可在 \cs{color_select:n} 中使用。
 \end{function}
@@ -588,6 +657,8 @@
   \end{syntax}
   设置网格显示的范围。\meta{left}、\meta{right} 为距页面左端的距离。\meta{top}、\meta{bottom} 为距页面顶端的距离。
 \end{function}
+
+也可以使用 \verb|\zitiesetup{background={|\meta{background key-val}\verb|}}| 来设置键。
 
 本文档的设置为：
 \begin{verbatim}
@@ -726,9 +797,12 @@
   是否为标点符号。仅在 \XeTeX 中有效。
 \end{function}
 
+\changes{v1.4.0}{2021/10/01}{新增 \cs{zitie_single_validate_glyph_construct:N}、\cs{zitie_single_validate_glyph_construct:nN}。}
 \begin{function}{
   \zitie_single_construct:N,
   \zitie_single_construct:nN,
+  \zitie_single_validate_glyph_construct:N,
+  \zitie_single_validate_glyph_construct:nN,
 }
   构造单个字的方框。
 \end{function}

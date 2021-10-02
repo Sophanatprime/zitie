@@ -5,6 +5,8 @@ sheet (copybook).
 
 ## Main Interfaces
 
+`\framesingle[<options>]{<CJK char>}`, makes frame for single <CJK char>
+
 `\framezi*[<options>]{<CJK chars>}`, makes frame for every single <CJK chars>
 
 `\framezifile*[<options>]{<filename>}`, makes frame from <filename> 
@@ -12,6 +14,10 @@ containning <CJK chars>
 
 `\framerange[<options>]{<char Hex range>}`, makes frame from Hex range,
 such as: "4E00 -> "4E27, "4E30. etc
+
+`\frametallrange[<options>]{<char Hex range>}`
+
+`\framezitallfile*[<options>]{<filename>}`
 
 `\zitienewfont*{...}`, declares new font(s) for making frame
 
@@ -51,7 +57,6 @@ Need not `pgf` or `pstricks`.
 - **optimize line breaking algorithm**
 - optimize `background` module 
 - optimize LuaTeX supporting
-- support pinyin
 - more grid
 - more transformation
 - support more character Classes
