@@ -60,6 +60,13 @@
 
 \tl_const:Nn \c_zitie_font_name_prefix_tl { 字帖@ }
 
+% later version
+\cs_if_free:NT \box_ht_plus_dp:N
+  {
+    \cs_new_protected:Npn \box_ht_plus_dp:N #1
+      { \tex_dimexpr:D \box_ht:N #1 + \box_dp:N #1 \scan_stop: }
+  }
+
 \sys_if_engine_xetex:TF { \tex_input:D zitie.xetex.def \prg_do_nothing: }
   {
     \sys_if_engine_luatex:TF { \tex_input:D zitie.luatex.def \prg_do_nothing: }
