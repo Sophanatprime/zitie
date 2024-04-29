@@ -30,7 +30,7 @@ much faster than `\frame...` family. Use
 `\usepackage[enable-background]{zitie}` to enable this function
 
 `\begin{zitieframe}{<initials>}[<options>] ... \end{zitieframe}`,
-environment version for `\framezi`, can cantain `\par`
+environment version for `\framezi`, can contain `\par`
 
 `\zitieCJKfamily`, use CJK font family declared before
 

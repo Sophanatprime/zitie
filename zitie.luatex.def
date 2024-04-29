@@ -30,7 +30,7 @@
         \int_set:Nn #4 { \int_max:nn {#1} { \tl_if_novalue:nTF {#2} {#1} {#2} } }
       }
   }
-% dosen't work
+% doesn't work
 \prg_new_conditional:Npnn \zitie_glyph_if_exist:N #1 { p , T , F , TF }
   { \prg_return_true: }
 \cs_set_eq:NN \__zitie_int_until_do:nn \int_until_do:nn
